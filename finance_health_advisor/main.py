@@ -44,13 +44,13 @@ def main():
     
     # Step 4: Generate visualizations
     print("\n[STEP 4] Generating visualizations...")
-    visualizer = FinancialVisualizer(users_df, monthly_df)
+    visualizer = FinancialVisualizer(users_processed, monthly_processed)
     viz_dict = visualizer.create_all_visualizations()
     print(f"   - Created {len(viz_dict)} visualizations")
     
     # Step 5: Generate summary statistics
     print("\n[STEP 5] Generating summary statistics...")
-    stats = generate_summary_statistics(users_df, monthly_df)
+    stats = generate_summary_statistics(users_processed, monthly_processed)
     
     print("\n" + "=" * 70)
     print("   PIPELINE COMPLETE!")
