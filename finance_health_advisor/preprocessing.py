@@ -156,17 +156,16 @@ def prepare_classification_data(df: pd.DataFrame) -> tuple:
     return X, y, le
 
 
-def prepare_regression_data(df: pd.DataFrame) -> tuple:
+def prepare_regression_data(monthly_df: pd.DataFrame, users_df: pd.DataFrame = None) -> tuple:
     """Prepare features and target for regression (predicting savings)."""
     
-    feature_cols = ['age', 'monthly_income', 'monthly_expenses', 'credit_score',
-                   'monthly_loan_payments', 'month', 'income', 'expenses',
-                   'savings_rate']
+    # Use monthly data features - income and expenses from monthly_df
+    feature_cols = ['month', 'income', 'expenses', 'savings_rate']
     
-    X = df[feature_cols].copy()
+    X = monthly_df[feature_cols].copy()
     X = X.fillna(X.median())
     
-    y = df['savings'].values
+    y = monthly_df['savings'].values
     
     return X, y
 
