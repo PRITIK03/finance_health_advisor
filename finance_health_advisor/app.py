@@ -343,7 +343,7 @@ def main():
         with tab2:
             st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
             st.markdown("<p class='card-title'>Feature Importance</p>", unsafe_allow_html=True)
-            X_class, y_class, le = prepare_classification_data(users_df)
+            X_class, y_class, le = prepare_classification_data(users_processed)
             
             from sklearn.ensemble import RandomForestClassifier
             rf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
