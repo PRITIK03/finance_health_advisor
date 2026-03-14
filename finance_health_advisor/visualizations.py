@@ -1,4 +1,4 @@
-﻿"""
+"""
 Visualization Module
 Creates comprehensive charts and plots for financial data analysis.
 """
@@ -15,6 +15,17 @@ from plotly import express as px
 # Set default style
 plt.style.use('seaborn-v0_8-whitegrid')
 sns.set_palette("husl")
+
+# Modern Plotly Template
+MODERN_TEMPLATE = "plotly_white"
+CHART_COLORS = px.colors.qualitative.Prism
+RISK_COLORS = {
+    'Very Low': '#2ecc71',   # Emerald
+    'Low': '#27ae60',        # Nephritis
+    'Medium': '#f1c40f',     # Sunflower
+    'High': '#e67e22',       # Carrot
+    'Very High': '#e74c3c'   # Alizarin
+}
 
 
 class FinancialVisualizer:
@@ -80,42 +91,45 @@ class FinancialVisualizer:
         fig = make_subplots(
             rows=1, cols=2,
             subplot_titles=('Risk Category Distribution', 'Financial Health by Risk Category'),
-            specs=[[{'type': 'pie'}, {'type': 'bar'}]]
+            specs=[[{'type': 'pie'}, {'type': 'box'}]]
         )
         
         # Pie chart for risk distribution
         risk_counts = self.users_df['risk_label'].value_counts()
-        colors = {'Very Low': '#27ae60', 'Low': '#2ecc71', 'Medium': '#f1c40f', 
-                 'High': '#e67e22', 'Very High': '#e74c3c'}
         
         fig.add_trace(
             go.Pie(
                 labels=risk_counts.index,
                 values=risk_counts.values,
-                marker_colors=[colors[r] for r in risk_counts.index],
+                marker_colors=[RISK_COLORS.get(r, '#95a5a6') for r in risk_counts.index],
                 textinfo='percent+label',
-                hole=0.4
+                hole=0.4,
+                pull=[0.05] * len(risk_counts)
             ),
             row=1, col=1
         )
         
         # Box plot for health score by risk
         for risk in ['Very Low', 'Low', 'Medium', 'High', 'Very High']:
-            risk_data = self.users_df[self.users_df['risk_label'] == risk]['financial_health_score']
-            fig.add_trace(
-                go.Box(
-                    y=risk_data,
-                    name=risk,
-                    marker_color=colors[risk],
-                    boxmean=True
-                ),
-                row=1, col=2
-            )
+            if risk in self.users_df['risk_label'].unique():
+                risk_data = self.users_df[self.users_df['risk_label'] == risk]['financial_health_score']
+                fig.add_trace(
+                    go.Box(
+                        y=risk_data,
+                        name=risk,
+                        marker_color=RISK_COLORS.get(risk, '#95a5a6'),
+                        boxmean=True,
+                        jitter=0.3,
+                        pointpos=-1.8
+                    ),
+                    row=1, col=2
+                )
         
         fig.update_layout(
-            title_text="Risk Category Analysis",
-            showlegend=True,
-            height=400
+            template=MODERN_TEMPLATE,
+            showlegend=False,
+            height=450,
+            margin=dict(t=50, b=20, l=20, r=20)
         )
         
         return fig
@@ -133,18 +147,18 @@ class FinancialVisualizer:
             z=corr_matrix.values,
             x=corr_matrix.columns,
             y=corr_matrix.columns,
-            colorscale='RdBu_r',
+            colorscale='Blues',
             text=np.round(corr_matrix.values, 2),
             texttemplate='%{text}',
-            showscale=True
+            showscale=True,
+            hoverongaps=False
         ))
         
         fig.update_layout(
+            template=MODERN_TEMPLATE,
             title='Feature Correlation Heatmap',
-            xaxis_title='Features',
-            yaxis_title='Features',
-            height=600,
-            width=800
+            height=500,
+            margin=dict(t=50, b=20, l=20, r=20)
         )
         
         return fig
@@ -157,20 +171,23 @@ class FinancialVisualizer:
                         'Insurance', 'Miscellaneous']
         
         # Average spending by category
-        avg_spending = self.monthly_df[spending_cols].mean()
+        avg_spending = self.monthly_df[spending_cols].mean().sort_values(ascending=False)
         
-        # Pie chart
+        # Donut chart
         fig = go.Figure(data=[go.Pie(
             labels=avg_spending.index,
             values=avg_spending.values,
-            hole=0.3,
+            hole=0.4,
             textinfo='label+percent',
-            marker=dict(colors=px.colors.qualitative.Set3)
+            marker=dict(colors=CHART_COLORS),
+            pull=[0.02] * len(avg_spending)
         )])
         
         fig.update_layout(
-            title='Average Spending by Category',
-            height=500
+            template=MODERN_TEMPLATE,
+            title='Average Spending Breakdown',
+            height=450,
+            margin=dict(t=50, b=20, l=20, r=20)
         )
         
         return fig
@@ -191,7 +208,7 @@ class FinancialVisualizer:
             y=monthly_avg['income'],
             mode='lines+markers',
             name='Income',
-            line=dict(color='#2ecc71', width=3)
+            line=dict(color='#2ecc71', width=3, shape='spline')
         ))
         
         fig.add_trace(go.Scatter(
@@ -199,7 +216,7 @@ class FinancialVisualizer:
             y=monthly_avg['expenses'],
             mode='lines+markers',
             name='Expenses',
-            line=dict(color='#e74c3c', width=3)
+            line=dict(color='#e74c3c', width=3, shape='spline')
         ))
         
         fig.add_trace(go.Scatter(
@@ -207,15 +224,18 @@ class FinancialVisualizer:
             y=monthly_avg['savings'],
             mode='lines+markers',
             name='Savings',
-            line=dict(color='#3498db', width=3)
+            line=dict(color='#3498db', width=3, shape='spline')
         ))
         
         fig.update_layout(
+            template=MODERN_TEMPLATE,
             title='Monthly Financial Trends (Average)',
             xaxis_title='Month',
             yaxis_title='Amount ($)',
-            height=400,
-            xaxis=dict(tickmode='linear', tick0=1, dtick=1)
+            height=450,
+            margin=dict(t=50, b=20, l=20, r=20),
+            xaxis=dict(tickmode='linear', tick0=1, dtick=1),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
         return fig
@@ -237,8 +257,10 @@ class FinancialVisualizer:
             go.Bar(
                 x=cluster_counts.index,
                 y=cluster_counts.values,
-                marker_color=px.colors.qualitative.Bold,
-                name='Users'
+                marker_color=CHART_COLORS,
+                name='Users',
+                text=cluster_counts.values,
+                textposition='auto',
             ),
             row=1, col=1
         )
@@ -250,21 +272,33 @@ class FinancialVisualizer:
             'financial_health_score': 'mean'
         }).reset_index()
         
-        x_data = cluster_metrics['cluster'].values
         fig.add_trace(
             go.Bar(
-                x=x_data,
+                x=cluster_metrics['cluster'],
                 y=cluster_metrics['monthly_income'],
-                name='Income',
-                marker_color='#3498db'
+                name='Avg Income',
+                marker_color=CHART_COLORS[0]
+            ),
+            row=1, col=2
+        )
+        
+        fig.add_trace(
+            go.Bar(
+                x=cluster_metrics['cluster'],
+                y=cluster_metrics['monthly_savings'],
+                name='Avg Savings',
+                marker_color=CHART_COLORS[1]
             ),
             row=1, col=2
         )
         
         fig.update_layout(
+            template=MODERN_TEMPLATE,
             title='Cluster Analysis',
-            height=400,
-            showlegend=True
+            height=450,
+            showlegend=True,
+            barmode='group',
+            margin=dict(t=50, b=20, l=20, r=20)
         )
         
         return fig
@@ -286,7 +320,7 @@ class FinancialVisualizer:
             y=normal['savings'],
             mode='markers',
             name='Normal',
-            marker=dict(color='#3498db', size=5, opacity=0.5)
+            marker=dict(color='#3498db', size=5, opacity=0.4)
         ))
         
         # Anomalies
@@ -295,14 +329,17 @@ class FinancialVisualizer:
             y=anomalies['savings'],
             mode='markers',
             name='Anomaly',
-            marker=dict(color='#e74c3c', size=10, symbol='x')
+            marker=dict(color='#e74c3c', size=10, symbol='x', line=dict(width=1))
         ))
         
         fig.update_layout(
+            template=MODERN_TEMPLATE,
             title='Anomaly Detection: Expenses vs Savings',
             xaxis_title='Expenses ($)',
             yaxis_title='Savings ($)',
-            height=500
+            height=500,
+            margin=dict(t=50, b=20, l=20, r=20),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
         return fig
@@ -318,11 +355,12 @@ class FinancialVisualizer:
             y=self.users_df['monthly_expenses'],
             mode='markers',
             marker=dict(
-                size=8,
+                size=10,
                 color=self.users_df['financial_health_score'],
                 colorscale='RdYlGn',
                 showscale=True,
-                colorbar=dict(title='Health Score')
+                colorbar=dict(title='Health Score', thickness=15),
+                line=dict(width=0.5, color='white')
             ),
             text=self.users_df.apply(
                 lambda r: f"Income: ${r['monthly_income']:,.0f}<br>Expenses: ${r['monthly_expenses']:,.0f}<br>Score: {r['financial_health_score']:.1f}", 
@@ -342,14 +380,17 @@ class FinancialVisualizer:
             y=p(x_line),
             mode='lines',
             name='Trend Line',
-            line=dict(color='black', dash='dash')
+            line=dict(color='rgba(0,0,0,0.5)', dash='dash', width=2)
         ))
         
         fig.update_layout(
-            title='Income vs Expenses (colored by Financial Health)',
+            template=MODERN_TEMPLATE,
+            title='Income vs Expenses',
             xaxis_title='Monthly Income ($)',
             yaxis_title='Monthly Expenses ($)',
-            height=500
+            height=500,
+            margin=dict(t=50, b=20, l=20, r=20),
+            showlegend=False
         )
         
         return fig
@@ -361,23 +402,26 @@ class FinancialVisualizer:
             'financial_health_score': 'mean',
             'monthly_income': 'mean',
             'monthly_savings': 'mean'
-        }).reset_index()
+        }).reset_index().sort_values('financial_health_score', ascending=False)
         
         fig = go.Figure(data=[
-            go.Bar(name='Income', x=employment_stats['employment_type'], 
-                   y=employment_stats['monthly_income'], marker_color='#3498db'),
-            go.Bar(name='Savings', x=employment_stats['employment_type'], 
-                   y=employment_stats['monthly_savings'], marker_color='#2ecc71'),
+            go.Bar(name='Avg Income', x=employment_stats['employment_type'], 
+                   y=employment_stats['monthly_income'], marker_color=CHART_COLORS[0]),
+            go.Bar(name='Avg Savings', x=employment_stats['employment_type'], 
+                   y=employment_stats['monthly_savings'], marker_color=CHART_COLORS[1]),
             go.Bar(name='Health Score (x100)', x=employment_stats['employment_type'], 
-                   y=employment_stats['financial_health_score']*100, marker_color='#9b59b6')
+                   y=employment_stats['financial_health_score']*100, marker_color=CHART_COLORS[2])
         ])
         
         fig.update_layout(
+            template=MODERN_TEMPLATE,
             barmode='group',
             title='Financial Metrics by Employment Type',
             xaxis_title='Employment Type',
-            yaxis_title='Amount / Score',
-            height=500
+            yaxis_title='Value',
+            height=500,
+            margin=dict(t=50, b=20, l=20, r=20),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
         return fig
