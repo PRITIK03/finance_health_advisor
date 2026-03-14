@@ -50,73 +50,104 @@ def main():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     
+    /* Global Styles */
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
     
-    .main {
+    /* Remove background constraints that might cause white space issues */
+    .stApp {
         background-color: #f8f9fa;
     }
-    
-    .stMetric {
-        background-color: white;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        border: 1px solid #e9ecef;
+
+    /* Fix Metric visibility */
+    [data-testid="stMetric"] {
+        background-color: white !important;
+        padding: 20px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        border: 1px solid #e9ecef !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+    }
+
+    [data-testid="stMetricLabel"] {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        margin-bottom: 5px !important;
     }
     
-    .metric-container {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-    
+    /* Card Container */
     .custom-card {
         background-color: white;
         padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        border: 1px solid #e9ecef;
-        margin-bottom: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border: 1px solid #f1f5f9;
+        margin-bottom: 25px;
+        overflow: hidden; /* Prevent content overflow */
     }
     
     .card-title {
-        font-size: 1.2rem;
+        font-size: 1.25rem;
         font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 15px;
+        color: #0f172a;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 10px;
     }
     
     .sidebar-text {
-        font-size: 0.9rem;
-        color: #64748b;
+        font-size: 0.95rem;
+        color: #475569;
+        line-height: 1.6;
     }
     
     .highlight {
-        color: #3b82f6;
+        color: #2563eb;
         font-weight: 600;
     }
 
     /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 24px;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
+        height: 55px;
         background-color: transparent;
-        border-radius: 4px 4px 0px 0px;
         color: #64748b;
         font-weight: 600;
         font-size: 1rem;
+        padding: 0 16px;
     }
 
     .stTabs [aria-selected="true"] {
-        color: #3b82f6 !important;
-        border-bottom-color: #3b82f6 !important;
+        color: #2563eb !important;
+        border-bottom: 2px solid #2563eb !important;
+    }
+
+    /* Fix Plotly chart overflow */
+    .js-plotly-plot {
+        border-radius: 8px;
+    }
+
+    /* Hide redundant elements if any */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Adjust main content padding */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 5rem !important;
+        max-width: 95% !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -299,9 +330,8 @@ def main():
         
         st.info("Random Forest classifier predicts financial vulnerability by analyzing user profiles and historical data.")
         
-        # Model metrics
+        # Metric cards
         col1, col2, col3 = st.columns(3)
-        
         with col1:
             st.metric("Training Accuracy", f"{results['classification']['train_metrics']['accuracy']:.1%}")
         with col2:
@@ -329,15 +359,30 @@ def main():
                     color_discrete_map=colors,
                     hole=0.5
                 )
-                fig.update_layout(template="plotly_white", margin=dict(t=20, b=20, l=20, r=20))
+                fig.update_layout(
+                    template="plotly_white", 
+                    margin=dict(t=20, b=20, l=20, r=20),
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+                )
                 st.plotly_chart(fig, use_container_width=True)
                 st.markdown("</div>", unsafe_allow_html=True)
                 
             with col2:
                 st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
                 st.markdown("<p class='card-title'>Risk Insights</p>", unsafe_allow_html=True)
-                st.write("The model classifies users into 5 risk levels. Most users fall into the **Medium** to **Low** risk categories.")
-                st.write("Key drivers for risk include **Credit Score**, **Monthly Savings**, and **Total Debt**.")
+                st.markdown(f"""
+                <div class='sidebar-text'>
+                The model classifies users into 5 risk levels. Most users fall into the <span class='highlight'>Medium</span> to <span class='highlight'>Low</span> risk categories.
+                <br><br>
+                <b>Key drivers for risk include:</b>
+                <ul>
+                    <li>Credit Score</li>
+                    <li>Monthly Savings</li>
+                    <li>Total Debt</li>
+                    <li>Income Stability</li>
+                </ul>
+                </div>
+                """, unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
                 
         with tab2:
@@ -362,7 +407,11 @@ def main():
                 color='importance',
                 color_continuous_scale='Blues'
             )
-            fig.update_layout(template="plotly_white", margin=dict(t=20, b=20, l=20, r=20))
+            fig.update_layout(
+                template="plotly_white", 
+                margin=dict(t=20, b=20, l=20, r=20),
+                height=500
+            )
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
     
