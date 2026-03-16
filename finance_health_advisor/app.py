@@ -179,6 +179,7 @@ def main():
         <li>Risk Prediction</li>
         <li>Savings Forecasting</li>
         <li>Anomaly Detection</li>
+        <li>Personalized Recommendations</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -537,6 +538,172 @@ def main():
                 use_container_width=True
             )
             st.markdown("</div>", unsafe_allow_html=True)
+    
+    # ============ RECOMMENDATIONS ============
+    elif page == "💡 Recommendations":
+        st.header("Personalized Financial Recommendations")
+        
+        st.info("AI-powered recommendations tailored to your financial profile based on ML analysis.")
+        
+        # Recommendation type selector
+        rec_type = st.radio(
+            "Select Recommendation Type",
+            ["👤 Individual User", "👥 Cohort Analysis"]
+        )
+        
+        if rec_type == "👤 Individual User":
+            # User selector
+            user_id = st.selectbox(
+                "Select a User",
+                users_df['user_id'].unique(),
+                format_func=lambda x: f"User {x}"
+            )
+            
+            # Get user data
+            user_row = users_df[users_df['user_id'] == user_id].iloc[0]
+            
+            # Display user summary
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Income", f"${user_row['monthly_income']:,.0f}")
+            with col2:
+                st.metric("Expenses", f"${user_row['monthly_expenses']:,.0f}")
+            with col3:
+                st.metric("Savings", f"${user_row['monthly_savings']:,.0f}")
+            with col4:
+                st.metric("Health Score", f"{user_row['financial_health_score']:.0f}/100")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Get recommendations
+            user_recs = recommendations_engine.generate_user_recommendations(user_id)
+            
+            # Display recommendations in tabs
+            tab1, tab2, tab3, tab4 = st.tabs(["💰 Budget", "💳 Debt", "🏦 Savings", "📈 Investments"])
+            
+            with tab1:
+                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
+                for rec in user_recs['budget']:
+                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
+                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                    st.markdown(f"   *💡 {rec['suggestion']}*")
+                    st.markdown("")
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            with tab2:
+                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
+                for rec in user_recs['debt']:
+                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
+                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                    st.markdown(f"   *💡 {rec['suggestion']}*")
+                    st.markdown("")
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            with tab3:
+                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
+                for rec in user_recs['savings']:
+                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                    st.markdown(f"   *💡 {rec['suggestion']}*")
+                    st.markdown("")
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            with tab4:
+                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
+                for rec in user_recs['investments']:
+                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                    st.markdown(f"   *💡 {rec['suggestion']}*")
+                    st.markdown("")
+                st.markdown("</div>", unsafe_allow_html=True)
+        
+        else:
+            # Cohort Analysis
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                cluster_filter = st.selectbox(
+                    "Filter by Cluster",
+                    ['All'] + list(range(5))
+                )
+            with col2:
+                risk_filter_cohort = st.selectbox(
+                    "Filter by Risk Level",
+                    ['All', 'Very Low', 'Low', 'Medium', 'High', 'Very High']
+                )
+            
+            cluster_val = None if cluster_filter == 'All' else cluster_filter
+            risk_val = None if risk_filter_cohort == 'All' else risk_filter_cohort
+            
+            # Get cohort recommendations
+            cohort_recs = recommendations_engine.generate_cohort_recommendations(cluster_val, risk_val)
+            
+            if cohort_recs['cohort_size'] > 0:
+                # Cohort statistics
+                stats = cohort_recs['cohort_stats']
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Cohort Size", f"{cohort_recs['cohort_size']:,}")
+                with col2:
+                    st.metric("Avg Income", f"${stats['avg_income']:,.0f}")
+                with col3:
+                    st.metric("Avg Savings", f"${stats['avg_savings']:,.0f}")
+                with col4:
+                    st.metric("Avg Health Score", f"{stats['avg_health_score']:.1f}/100")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown(f"*{cohort_recs['summary']}*")
+                
+                # Display cohort recommendations
+                tab1, tab2, tab3, tab4 = st.tabs(["💰 Budget", "💳 Debt", "🏦 Savings", "📈 Investments"])
+                
+                all_recs = cohort_recs['recommendations']
+                
+                with tab1:
+                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
+                    for rec in all_recs['budget']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                
+                with tab2:
+                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
+                    for rec in all_recs['debt']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                
+                with tab3:
+                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
+                    for rec in all_recs['savings']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                
+                with tab4:
+                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
+                    for rec in all_recs['investments']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
+                    st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.warning("No users found in the selected cohort.")
     
     # ============ DATA EXPLORER ============
     elif page == "🔍 Data Explorer":
