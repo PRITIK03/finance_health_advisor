@@ -199,11 +199,14 @@ def main():
     # Visualizations
     visualizer = FinancialVisualizer(users_df, monthly_df)
     
+    # Recommendations Engine
+    recommendations_engine = RecommendationsEngine(users_df, monthly_df)
+    
     # Navigation
     page = st.sidebar.radio(
         "Select Section",
         ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "🔍 Data Explorer"]
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🔍 Data Explorer"]
     )
     
     # ============ DASHBOARD OVERVIEW ============
