@@ -19,6 +19,7 @@ from data_generator import generate_full_dataset
 from preprocessing import FinancialDataPreprocessor, prepare_classification_data
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
+from recommendations import RecommendationsEngine
 
 
 @st.cache_data
