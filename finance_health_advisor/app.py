@@ -54,11 +54,11 @@ def main():
     /* Global Styles */
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
+        color: #1e293b !important;
     }
     
-    /* Remove background constraints that might cause white space issues */
     .stApp {
-        background-color: #f8f9fa;
+        background-color: #f8f9fa !important;
     }
 
     /* Fix Metric visibility */
@@ -66,14 +66,14 @@ def main():
         background-color: white !important;
         padding: 20px !important;
         border-radius: 12px !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-        border: 1px solid #e9ecef !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        border: 1px solid #e2e8f0 !important;
     }
 
     [data-testid="stMetricValue"] {
         font-size: 1.8rem !important;
         font-weight: 700 !important;
-        color: #1e293b !important;
+        color: #0f172a !important;
     }
 
     [data-testid="stMetricLabel"] {
@@ -83,24 +83,35 @@ def main():
         margin-bottom: 5px !important;
     }
     
-    /* Card Container */
+    /* Container styling (using st.container(border=True)) */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+        border: 1px solid #e2e8f0 !important;
+        margin-bottom: 24px !important;
+        padding: 10px !important;
+    }
+
+    /* Legacy Card for backward compatibility or direct HTML */
     .custom-card {
         background-color: white;
         padding: 25px;
         border-radius: 16px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        border: 1px solid #f1f5f9;
+        border: 1px solid #e2e8f0;
         margin-bottom: 25px;
-        overflow: hidden; /* Prevent content overflow */
+        color: #1e293b;
     }
     
     .card-title {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: #0f172a;
+        margin-top: 0;
         margin-bottom: 20px;
         border-bottom: 2px solid #f1f5f9;
-        padding-bottom: 10px;
+        padding-bottom: 12px;
     }
     
     .sidebar-text {
@@ -111,17 +122,17 @@ def main():
     
     .highlight {
         color: #2563eb;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-        border-bottom: 1px solid #e2e8f0;
+        gap: 32px;
+        border-bottom: 2px solid #e2e8f0;
     }
 
     .stTabs [data-baseweb="tab"] {
-        height: 55px;
+        height: 60px;
         background-color: transparent;
         color: #64748b;
         font-weight: 600;
@@ -134,21 +145,31 @@ def main():
         border-bottom: 2px solid #2563eb !important;
     }
 
-    /* Fix Plotly chart overflow */
-    .js-plotly-plot {
-        border-radius: 8px;
-    }
-
     /* Hide redundant elements if any */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Adjust main content padding */
+    /* Main Content Padding */
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 5rem !important;
         max-width: 95% !important;
+    }
+
+    /* Ensure text inside markdown and headers is dark */
+    .stMarkdown p, .stMarkdown li, .stMarkdown span, h1, h2, h3, h4, h5, h6 {
+        color: #1e293b !important;
+    }
+    
+    /* Fix Sidebar text visibility */
+    [data-testid="stSidebar"] .stMarkdown p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+        color: #475569 !important;
+    }
+    
+    /* Fix for Streamlit's info/warning boxes to keep their intended contrast */
+    [data-testid="stNotification"] p {
+        color: #1e293b !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -237,46 +258,33 @@ def main():
         with tab1:
             col1, col2 = st.columns(2)
             with col1:
-                with st.container():
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_risk_analysis_plot(), use_container_width=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
             
             with col2:
-                with st.container():
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_spending_breakdown_chart(), use_container_width=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
             
-            with st.container():
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+            with st.container(border=True):
                 st.plotly_chart(visualizer.create_time_series_plot(), use_container_width=True)
-                st.markdown("</div>", unsafe_allow_html=True)
                 
         with tab2:
             col1, col2 = st.columns(2)
             with col1:
-                with st.container():
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_income_expense_scatter(), use_container_width=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
             
             with col2:
-                with st.container():
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_employment_analysis(), use_container_width=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
                     
-            with st.container():
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+            with st.container(border=True):
                 st.plotly_chart(visualizer.create_correlation_heatmap(), use_container_width=True)
-                st.markdown("</div>", unsafe_allow_html=True)
                 
         with tab3:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.subheader("Recent Financial Snapshot")
-            st.dataframe(users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score']].head(20), use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.subheader("Recent Financial Snapshot")
+                st.dataframe(users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score']].head(20), use_container_width=True)
     
     # ============ USER SEGMENTATION ============
     elif page == "👥 User Segmentation":
@@ -290,44 +298,43 @@ def main():
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.plotly_chart(visualizer.create_cluster_analysis_plot(), use_container_width=True)
-                st.markdown("</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.plotly_chart(visualizer.create_cluster_analysis_plot(), use_container_width=True)
                 
             with col2:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.markdown("<p class='card-title'>Cluster Distribution</p>", unsafe_allow_html=True)
-                cluster_counts = users_df['cluster'].value_counts().sort_index()
-                for i, count in cluster_counts.items():
-                    st.write(f"**Cluster {i}:** {count} users")
-                st.markdown("</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Cluster Distribution</p>", unsafe_allow_html=True)
+                    cluster_counts = users_df['cluster'].value_counts().sort_index()
+                    for i, count in cluster_counts.items():
+                        st.write(f"**Cluster {i}:** {count} users")
         
         with tab2:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.subheader("Cluster Profiles")
-            cluster_stats = users_df.groupby('cluster').agg({
-                'monthly_income': 'mean',
-                'monthly_expenses': 'mean',
-                'monthly_savings': 'mean',
-                'credit_score': 'mean',
-                'financial_health_score': 'mean'
-            }).round(2)
-            st.dataframe(cluster_stats, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.subheader("Cluster Profiles")
+                cluster_stats = users_df.groupby('cluster').agg({
+                    'monthly_income': 'mean',
+                    'monthly_expenses': 'mean',
+                    'monthly_savings': 'mean',
+                    'credit_score': 'mean',
+                    'financial_health_score': 'mean'
+                }).round(2)
+                st.dataframe(cluster_stats, use_container_width=True)
             
+            st.markdown("<br>", unsafe_allow_html=True)
             st.subheader("Profile Descriptions")
             cols = st.columns(3)
             for i, cluster_id in enumerate(sorted(users_df['cluster'].unique())):
                 with cols[i % 3]:
                     cluster_data = users_df[users_df['cluster'] == cluster_id]
-                    st.markdown(f"""
-                    <div class='custom-card'>
-                        <p class='card-title'>Profile {cluster_id}</p>
+                    with st.container(border=True):
+                        st.markdown(f"<p class='card-title'>Profile {cluster_id}</p>", unsafe_allow_html=True)
+                        st.markdown(f"""
+                        <div class='sidebar-text'>
                         Avg Health: <span class='highlight'>{cluster_data['financial_health_score'].mean():.1f}</span><br>
                         Avg Income: ${cluster_data['monthly_income'].mean():,.0f}<br>
                         Users: {len(cluster_data)}
-                    </div>
-                    """, unsafe_allow_html=True)
+                        </div>
+                        """, unsafe_allow_html=True)
     
     # ============ RISK PREDICTION ============
     elif page == "🎯 Risk Prediction":
@@ -351,74 +358,71 @@ def main():
         with tab1:
             col1, col2 = st.columns([1, 1])
             with col1:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.markdown("<p class='card-title'>Risk Distribution</p>", unsafe_allow_html=True)
-                risk_counts = users_df['risk_label'].value_counts()
-                colors = {'Very Low': '#2ecc71', 'Low': '#27ae60', 'Medium': '#f1c40f', 
-                         'High': '#e67e22', 'Very High': '#e74c3c'}
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Risk Distribution</p>", unsafe_allow_html=True)
+                    risk_counts = users_df['risk_label'].value_counts()
+                    colors = {'Very Low': '#2ecc71', 'Low': '#27ae60', 'Medium': '#f1c40f', 
+                             'High': '#e67e22', 'Very High': '#e74c3c'}
+                    
+                    fig = px.pie(
+                        values=risk_counts.values, 
+                        names=risk_counts.index,
+                        color=risk_counts.index,
+                        color_discrete_map=colors,
+                        hole=0.5
+                    )
+                    fig.update_layout(
+                        template="plotly_white", 
+                        margin=dict(t=20, b=20, l=20, r=20),
+                        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
                 
-                fig = px.pie(
-                    values=risk_counts.values, 
-                    names=risk_counts.index,
-                    color=risk_counts.index,
-                    color_discrete_map=colors,
-                    hole=0.5
+            with col2:
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Risk Insights</p>", unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class='sidebar-text'>
+                    The model classifies users into 5 risk levels. Most users fall into the <span class='highlight'>Medium</span> to <span class='highlight'>Low</span> risk categories.
+                    <br><br>
+                    <b>Key drivers for risk include:</b>
+                    <ul>
+                        <li>Credit Score</li>
+                        <li>Monthly Savings</li>
+                        <li>Total Debt</li>
+                        <li>Income Stability</li>
+                    </ul>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+        with tab2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Feature Importance</p>", unsafe_allow_html=True)
+                X_class, y_class, le = prepare_classification_data(users_processed)
+                
+                from sklearn.ensemble import RandomForestClassifier
+                rf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+                rf.fit(X_class.values, y_class)
+                
+                importance = pd.DataFrame({
+                    'feature': X_class.columns,
+                    'importance': rf.feature_importances_
+                }).sort_values('importance', ascending=True)
+                
+                fig = px.bar(
+                    importance, 
+                    x='importance', 
+                    y='feature', 
+                    orientation='h',
+                    color='importance',
+                    color_continuous_scale='Blues'
                 )
                 fig.update_layout(
                     template="plotly_white", 
                     margin=dict(t=20, b=20, l=20, r=20),
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+                    height=500
                 )
                 st.plotly_chart(fig, use_container_width=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-            with col2:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.markdown("<p class='card-title'>Risk Insights</p>", unsafe_allow_html=True)
-                st.markdown(f"""
-                <div class='sidebar-text'>
-                The model classifies users into 5 risk levels. Most users fall into the <span class='highlight'>Medium</span> to <span class='highlight'>Low</span> risk categories.
-                <br><br>
-                <b>Key drivers for risk include:</b>
-                <ul>
-                    <li>Credit Score</li>
-                    <li>Monthly Savings</li>
-                    <li>Total Debt</li>
-                    <li>Income Stability</li>
-                </ul>
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-        with tab2:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown("<p class='card-title'>Feature Importance</p>", unsafe_allow_html=True)
-            X_class, y_class, le = prepare_classification_data(users_processed)
-            
-            from sklearn.ensemble import RandomForestClassifier
-            rf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
-            rf.fit(X_class.values, y_class)
-            
-            importance = pd.DataFrame({
-                'feature': X_class.columns,
-                'importance': rf.feature_importances_
-            }).sort_values('importance', ascending=True)
-            
-            fig = px.bar(
-                importance, 
-                x='importance', 
-                y='feature', 
-                orientation='h',
-                color='importance',
-                color_continuous_scale='Blues'
-            )
-            fig.update_layout(
-                template="plotly_white", 
-                margin=dict(t=20, b=20, l=20, r=20),
-                height=500
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
     
     # ============ FORECASTING ============
     elif page == "📈 Forecasting":
@@ -441,66 +445,64 @@ def main():
         tab1, tab2 = st.tabs(["📈 Trends", "📊 Segment Analysis"])
         
         with tab1:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown("<p class='card-title'>Monthly Savings Trends</p>", unsafe_allow_html=True)
-            
-            monthly_avg = monthly_df.groupby('month').agg({
-                'income': 'mean',
-                'expenses': 'mean',
-                'savings': 'mean'
-            }).reset_index()
-            
-            fig = go.Figure()
-            
-            fig.add_trace(go.Scatter(
-                x=monthly_avg['month'],
-                y=monthly_avg['savings'],
-                mode='lines+markers',
-                name='Actual Savings',
-                line=dict(color='#3b82f6', width=3, shape='spline')
-            ))
-            
-            # Add trend line
-            z = np.polyfit(monthly_avg['month'], monthly_avg['savings'], 2)
-            p = np.poly1d(z)
-            x_trend = np.arange(1, 13)
-            
-            fig.add_trace(go.Scatter(
-                x=x_trend,
-                y=p(x_trend),
-                mode='lines',
-                name='Forecast Trend',
-                line=dict(color='#ef4444', dash='dash', width=2)
-            ))
-            
-            fig.update_layout(
-                template="plotly_white",
-                xaxis_title='Month',
-                yaxis_title='Savings ($)',
-                xaxis=dict(tickmode='linear', tick0=1, dtick=1),
-                margin=dict(t=20, b=20, l=20, r=20),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Monthly Savings Trends</p>", unsafe_allow_html=True)
+                
+                monthly_avg = monthly_df.groupby('month').agg({
+                    'income': 'mean',
+                    'expenses': 'mean',
+                    'savings': 'mean'
+                }).reset_index()
+                
+                fig = go.Figure()
+                
+                fig.add_trace(go.Scatter(
+                    x=monthly_avg['month'],
+                    y=monthly_avg['savings'],
+                    mode='lines+markers',
+                    name='Actual Savings',
+                    line=dict(color='#3b82f6', width=3, shape='spline')
+                ))
+                
+                # Add trend line
+                z = np.polyfit(monthly_avg['month'], monthly_avg['savings'], 2)
+                p = np.poly1d(z)
+                x_trend = np.arange(1, 13)
+                
+                fig.add_trace(go.Scatter(
+                    x=x_trend,
+                    y=p(x_trend),
+                    mode='lines',
+                    name='Forecast Trend',
+                    line=dict(color='#ef4444', dash='dash', width=2)
+                ))
+                
+                fig.update_layout(
+                    template="plotly_white",
+                    xaxis_title='Month',
+                    yaxis_title='Savings ($)',
+                    xaxis=dict(tickmode='linear', tick0=1, dtick=1),
+                    margin=dict(t=20, b=20, l=20, r=20),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
             
         with tab2:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown("<p class='card-title'>Savings Patterns by Risk Category</p>", unsafe_allow_html=True)
-            
-            savings_by_risk = monthly_df.groupby('risk_label')['savings'].mean().sort_values()
-            
-            fig = px.bar(
-                x=savings_by_risk.index,
-                y=savings_by_risk.values,
-                labels={'x': 'Risk Category', 'y': 'Average Savings ($)'},
-                color=savings_by_risk.values,
-                color_continuous_scale='RdYlGn'
-            )
-            fig.update_layout(template="plotly_white", margin=dict(t=20, b=20, l=20, r=20))
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Savings Patterns by Risk Category</p>", unsafe_allow_html=True)
+                
+                savings_by_risk = monthly_df.groupby('risk_label')['savings'].mean().sort_values()
+                
+                fig = px.bar(
+                    x=savings_by_risk.index,
+                    y=savings_by_risk.values,
+                    labels={'x': 'Risk Category', 'y': 'Average Savings ($)'},
+                    color=savings_by_risk.values,
+                    color_continuous_scale='RdYlGn'
+                )
+                fig.update_layout(template="plotly_white", margin=dict(t=20, b=20, l=20, r=20))
+                st.plotly_chart(fig, use_container_width=True)
     
     # ============ ANOMALY DETECTION ============
     elif page == "🚨 Anomaly Detection":
@@ -524,20 +526,18 @@ def main():
         tab1, tab2 = st.tabs(["🚨 Visual Analysis", "📋 Detected Anomalies"])
         
         with tab1:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.plotly_chart(visualizer.create_anomaly_analysis_plot(), use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.plotly_chart(visualizer.create_anomaly_analysis_plot(), use_container_width=True)
             
         with tab2:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown("<p class='card-title'>Sample of Flagged Transactions</p>", unsafe_allow_html=True)
-            
-            anomalies = monthly_df[monthly_df['ml_anomaly'] == 1]
-            st.dataframe(
-                anomalies[['user_id', 'month', 'income', 'expenses', 'savings', 'Entertainment', 'Shopping']].head(20),
-                use_container_width=True
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Sample of Flagged Transactions</p>", unsafe_allow_html=True)
+                
+                anomalies = monthly_df[monthly_df['ml_anomaly'] == 1]
+                st.dataframe(
+                    anomalies[['user_id', 'month', 'income', 'expenses', 'savings', 'Entertainment', 'Shopping']].head(20),
+                    use_container_width=True
+                )
     
     # ============ RECOMMENDATIONS ============
     elif page == "💡 Recommendations":
@@ -582,44 +582,40 @@ def main():
             tab1, tab2, tab3, tab4 = st.tabs(["💰 Budget", "💳 Debt", "🏦 Savings", "📈 Investments"])
             
             with tab1:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
-                for rec in user_recs['budget']:
-                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
-                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                    st.markdown(f"   *💡 {rec['suggestion']}*")
-                    st.markdown("")
-                st.markdown("</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
+                    for rec in user_recs['budget']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
             
             with tab2:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
-                for rec in user_recs['debt']:
-                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
-                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                    st.markdown(f"   *💡 {rec['suggestion']}*")
-                    st.markdown("")
-                st.markdown("</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
+                    for rec in user_recs['debt']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
             
             with tab3:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
-                for rec in user_recs['savings']:
-                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
-                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                    st.markdown(f"   *💡 {rec['suggestion']}*")
-                    st.markdown("")
-                st.markdown("</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
+                    for rec in user_recs['savings']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
             
             with tab4:
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
-                for rec in user_recs['investments']:
-                    status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
-                    st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                    st.markdown(f"   *💡 {rec['suggestion']}*")
-                    st.markdown("")
-                st.markdown("</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
+                    for rec in user_recs['investments']:
+                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                        st.markdown(f"   *💡 {rec['suggestion']}*")
+                        st.markdown("")
         
         else:
             # Cohort Analysis
@@ -664,44 +660,40 @@ def main():
                 all_recs = cohort_recs['recommendations']
                 
                 with tab1:
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                    st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
-                    for rec in all_recs['budget']:
-                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
-                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                        st.markdown(f"   *💡 {rec['suggestion']}*")
-                        st.markdown("")
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    with st.container(border=True):
+                        st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
+                        for rec in all_recs['budget']:
+                            status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
+                            st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                            st.markdown(f"   *💡 {rec['suggestion']}*")
+                            st.markdown("")
                 
                 with tab2:
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                    st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
-                    for rec in all_recs['debt']:
-                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
-                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                        st.markdown(f"   *💡 {rec['suggestion']}*")
-                        st.markdown("")
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    with st.container(border=True):
+                        st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
+                        for rec in all_recs['debt']:
+                            status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
+                            st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                            st.markdown(f"   *💡 {rec['suggestion']}*")
+                            st.markdown("")
                 
                 with tab3:
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                    st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
-                    for rec in all_recs['savings']:
-                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
-                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                        st.markdown(f"   *💡 {rec['suggestion']}*")
-                        st.markdown("")
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    with st.container(border=True):
+                        st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
+                        for rec in all_recs['savings']:
+                            status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                            st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                            st.markdown(f"   *💡 {rec['suggestion']}*")
+                            st.markdown("")
                 
                 with tab4:
-                    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-                    st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
-                    for rec in all_recs['investments']:
-                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
-                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                        st.markdown(f"   *💡 {rec['suggestion']}*")
-                        st.markdown("")
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    with st.container(border=True):
+                        st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
+                        for rec in all_recs['investments']:
+                            status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                            st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                            st.markdown(f"   *💡 {rec['suggestion']}*")
+                            st.markdown("")
             else:
                 st.warning("No users found in the selected cohort.")
     
@@ -714,54 +706,51 @@ def main():
         data_choice = st.selectbox("Select Dataset", ["User Profiles", "Monthly Transactions"])
         
         if data_choice == "User Profiles":
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown("<p class='card-title'>User Profiles Filter</p>", unsafe_allow_html=True)
-            
-            # Filters
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                min_income = st.slider("Min Income", 0, 20000, 0)
-            with col2:
-                max_income = st.slider("Max Income", 0, 20000, 20000)
-            with col3:
-                risk_filter = st.multiselect("Risk Category", 
-                                            ['Very Low', 'Low', 'Medium', 'High', 'Very High'],
-                                            default=['Very Low', 'Low', 'Medium', 'High', 'Very High'])
-            
-            filtered = users_df[
-                (users_df['monthly_income'] >= min_income) &
-                (users_df['monthly_income'] <= max_income) &
-                (users_df['risk_label'].isin(risk_filter))
-            ]
-            
-            st.dataframe(filtered.head(100), use_container_width=True)
-            st.write(f"Showing {len(filtered)} of {len(users_df)} users")
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>User Profiles Filter</p>", unsafe_allow_html=True)
+                
+                # Filters
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    min_income = st.slider("Min Income", 0, 20000, 0)
+                with col2:
+                    max_income = st.slider("Max Income", 0, 20000, 20000)
+                with col3:
+                    risk_filter = st.multiselect("Risk Category", 
+                                                ['Very Low', 'Low', 'Medium', 'High', 'Very High'],
+                                                default=['Very Low', 'Low', 'Medium', 'High', 'Very High'])
+                
+                filtered = users_df[
+                    (users_df['monthly_income'] >= min_income) &
+                    (users_df['monthly_income'] <= max_income) &
+                    (users_df['risk_label'].isin(risk_filter))
+                ]
+                
+                st.dataframe(filtered.head(100), use_container_width=True)
+                st.write(f"Showing {len(filtered)} of {len(users_df)} users")
             
         else:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown("<p class='card-title'>Monthly Transactions Filter</p>", unsafe_allow_html=True)
-            
-            # Month selector
-            month_filter = st.selectbox("Select Month", list(range(1, 13)), format_func=lambda x: f"Month {x}")
-            
-            filtered = monthly_df[monthly_df['month'] == month_filter]
-            
-            st.dataframe(filtered.head(100), use_container_width=True)
-            st.write(f"Showing {len(filtered)} records for Month {month_filter}")
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Monthly Transactions Filter</p>", unsafe_allow_html=True)
+                
+                # Month selector
+                month_filter = st.selectbox("Select Month", list(range(1, 13)), format_func=lambda x: f"Month {x}")
+                
+                filtered = monthly_df[monthly_df['month'] == month_filter]
+                
+                st.dataframe(filtered.head(100), use_container_width=True)
+                st.write(f"Showing {len(filtered)} records for Month {month_filter}")
         
         # Statistics
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-        st.markdown("<p class='card-title'>Statistical Summary</p>", unsafe_allow_html=True)
-        
-        if data_choice == "User Profiles":
-            st.dataframe(users_df.describe(), use_container_width=True)
-        else:
-            st.dataframe(monthly_df.describe(), use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>Statistical Summary</p>", unsafe_allow_html=True)
+            
+            if data_choice == "User Profiles":
+                st.dataframe(users_df.describe(), use_container_width=True)
+            else:
+                st.dataframe(monthly_df.describe(), use_container_width=True)
     
     # Footer
     st.markdown("---")
