@@ -40,7 +40,7 @@ def main():
     
     # Step 3: Train ML models
     print("\n[STEP 3] Training Machine Learning models...")
-    results = train_all_models(users_df, monthly_df)
+    results, pipeline = train_all_models(users_df, monthly_df)
     
     # Step 4: Generate visualizations
     print("\n[STEP 4] Generating visualizations...")

@@ -15,7 +15,7 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from data_generator import generate_full_dataset
+from data_generator import generate_full_dataset, calculate_financial_health_score
 from preprocessing import FinancialDataPreprocessor, prepare_classification_data
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
@@ -32,8 +32,8 @@ def load_data():
 @st.cache_resource
 def train_models(users_df, monthly_df):
     """Train ML models."""
-    results = train_all_models(users_df, monthly_df)
-    return results
+    results, pipeline = train_all_models(users_df, monthly_df)
+    return results, pipeline
 
 
 def main():
@@ -211,7 +211,7 @@ def main():
     
     # Train models
     with st.spinner("Training ML models..."):
-        results = train_all_models(users_df, monthly_df)
+        results, pipeline = train_models(users_df, monthly_df)
     
     # Preprocess data
     preprocessor = FinancialDataPreprocessor()
@@ -228,7 +228,33 @@ def main():
     page = st.sidebar.radio(
         "Select Section",
         ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🔍 Data Explorer"]
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "� Scenario Simulator", "� Data Explorer"]
+    )
+    
+    # Sidebar Info
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Quick Insights")
+    avg_health = users_df['financial_health_score'].mean()
+    health_status = "Good" if avg_health > 70 else "Fair" if avg_health > 50 else "Poor"
+    
+    st.sidebar.markdown(f"""
+    <div class='sidebar-text'>
+    <b>System Status:</b> <span style='color: #10b981;'>Live</span><br>
+    <b>Avg Health:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
+    <b>Risk Focus:</b> <span class='highlight'>{users_df['risk_label'].mode()[0]}</span><br>
+    <b>Model Accuracy:</b> <span class='highlight'>{results['classification']['test_metrics']['accuracy']:.1%}</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Export Data Button
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Export Analysis")
+    summary_data = users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score', 'risk_label']].to_csv(index=False)
+    st.sidebar.download_button(
+        label="📥 Download User Summary (CSV)",
+        data=summary_data,
+        file_name="financial_health_summary.csv",
+        mime="text/csv",
     )
     
     # ============ DASHBOARD OVERVIEW ============
@@ -696,7 +722,119 @@ def main():
                             st.markdown("")
             else:
                 st.warning("No users found in the selected cohort.")
-    
+
+    # ============ SCENARIO SIMULATOR ============
+    elif page == "� Scenario Simulator":
+        st.header("Financial Scenario Simulator")
+        
+        st.info("Simulate how changes in your income, expenses, and debt would affect your overall financial health score and risk category.")
+        
+        # Simulator inputs
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>Simulation Parameters</p>", unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                sim_income = st.number_input("Monthly Income ($)", 0, 50000, 5000)
+                sim_expenses = st.number_input("Monthly Expenses ($)", 0, 50000, 3500)
+            with col2:
+                sim_savings = st.number_input("Monthly Savings ($)", 0, 50000, 1000)
+                sim_investments = st.number_input("Monthly Investments ($)", 0, 50000, 500)
+            with col3:
+                sim_credit = st.slider("Credit Score", 300, 850, 700)
+                sim_debt = st.number_input("Total Debt ($)", 0, 1000000, 50000)
+        
+        # Calculation logic
+        sim_profile = {
+            'monthly_income': sim_income,
+            'monthly_expenses': sim_expenses,
+            'monthly_savings': sim_savings,
+            'monthly_investments': sim_investments,
+            'credit_score': sim_credit,
+            'total_debt': sim_debt
+        }
+        
+        sim_health_score = calculate_financial_health_score(sim_profile)
+        
+        # Prepare for ML prediction
+        # The classification model needs several features. We'll fill in averages for missing ones.
+        sim_features = pd.DataFrame([{
+            'age': 35,
+            'monthly_income': sim_income,
+            'monthly_expenses': sim_expenses,
+            'monthly_savings': sim_savings,
+            'monthly_investments': sim_investments,
+            'credit_score': sim_credit,
+            'total_debt': sim_debt,
+            'monthly_loan_payments': sim_income * 0.1,  # Assumption
+            'financial_health_score': sim_health_score,
+            'employment_type_encoded': 0  # Assumption
+        }])
+        
+        # Feature engineering needed
+        sim_features['savings_rate'] = sim_features['monthly_savings'] / sim_features['monthly_income'].replace(0, 1)
+        sim_features['expense_ratio'] = sim_features['monthly_expenses'] / sim_features['monthly_income'].replace(0, 1)
+        sim_features['investment_rate'] = sim_features['monthly_investments'] / sim_features['monthly_income'].replace(0, 1)
+        sim_features['debt_to_income'] = sim_features['total_debt'] / (sim_features['monthly_income'] * 12).replace(0, 1)
+        sim_features['loan_to_income'] = sim_features['monthly_loan_payments'] / sim_features['monthly_income'].replace(0, 1)
+        
+        # Ensure correct column order for classifier
+        # Get the feature columns from the classification model's feature importance
+        X_class_cols, _, _ = prepare_classification_data(users_processed)
+        sim_features = sim_features[X_class_cols.columns]
+        
+        # Predict risk
+        sim_risk_idx = pipeline.classification_model.predict(sim_features.values)[0]
+        # Label encoder mapping
+        _, _, le = prepare_classification_data(users_df)
+        sim_risk_label = le.inverse_transform([sim_risk_idx])[0]
+        
+        # Simulation Results
+        st.markdown("<br>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Predicted Health Score</p>", unsafe_allow_html=True)
+                st.markdown(f"<h1 style='text-align: center; color: #2563eb;'>{sim_health_score:.1f}</h1>", unsafe_allow_html=True)
+                
+                # Progress bar for health score
+                st.progress(sim_health_score / 100)
+                
+                st.markdown(f"""
+                <div class='sidebar-text' style='text-align: center;'>
+                Your simulated profile is in the <b>{sim_risk_label}</b> risk category.
+                </div>
+                """, unsafe_allow_html=True)
+                
+        with col2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Comparison to Average</p>", unsafe_allow_html=True)
+                
+                # Comparison metrics
+                avg_income = users_df['monthly_income'].mean()
+                avg_health = users_df['financial_health_score'].mean()
+                
+                income_delta = (sim_income - avg_income) / avg_income * 100
+                health_delta = sim_health_score - avg_health
+                
+                st.metric("Income vs Market", f"${sim_income:,.0f}", f"{income_delta:+.1f}%")
+                st.metric("Health vs Market", f"{sim_health_score:.1f}", f"{health_delta:+.1f} pts")
+        
+        # Actionable insights for simulator
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>Simulation Insights</p>", unsafe_allow_html=True)
+            
+            if sim_health_score < 50:
+                st.warning("Your simulated profile shows high financial stress. Consider reducing debt and increasing the savings rate.")
+            elif sim_health_score < 75:
+                st.info("You have a solid foundation. To reach an excellent score, focus on increasing investments and maintaining a high credit score.")
+            else:
+                st.success("Excellent! This simulated profile represents strong financial health. Keep up the disciplined savings and investment approach.")
+                
+            st.write("**Top Tip:** Try increasing your 'Monthly Savings' by just $200 in the simulator above to see how it moves your health score!")
+
     # ============ DATA EXPLORER ============
     elif page == "🔍 Data Explorer":
         st.header("Data Explorer")

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Machine Learning Models Module
 Implements clustering, classification, regression, and anomaly detection.
 """
@@ -305,7 +305,7 @@ def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> dict:
     print("ALL MODELS TRAINED SUCCESSFULLY!")
     print("=" * 60)
     
-    return results
+    return results, pipeline
 
 
 if __name__ == "__main__":
