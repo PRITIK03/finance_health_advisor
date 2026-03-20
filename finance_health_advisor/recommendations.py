@@ -113,7 +113,7 @@ class RecommendationsEngine:
         debt = user_data.get('total_debt', 0)
         income = user_data.get('monthly_income', 0)
         credit_score = user_data.get('credit_score', 0)
-        loan_payments = user_data.get('monthly_loan_payment', 0)
+        loan_payments = user_data.get('monthly_loan_payments', 0)
         
         recommendations = []
         
@@ -461,7 +461,7 @@ class RecommendationsEngine:
             'monthly_expenses': avg_expenses,
             'monthly_savings': avg_savings,
             'total_debt': cohort['total_debt'].mean(),
-            'monthly_loan_payment': cohort['monthly_loan_payment'].mean(),
+            'monthly_loan_payments': cohort['monthly_loan_payments'].mean(),
             'credit_score': cohort['credit_score'].mean(),
             'age': cohort['age'].mean(),
             'risk_label': common_risk,

@@ -958,9 +958,10 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; color: gray;'>
-        <p>💰 AI-Powered Personal Finance Health Advisor | Built with Streamlit</p>
-        <p>End-to-End ML Pipeline: Data Generation → Preprocessing → ML Models → Visualization</p>
+    <div style='text-align: center; color: #64748b; padding: 20px;'>
+        <p style='font-weight: 600;'>💰 AI-Powered Personal Finance Health Advisor</p>
+        <p style='font-size: 0.9rem;'>End-to-End ML Pipeline: Data Generation → Preprocessing → ML Models → Visualization → Insights</p>
+        <p style='font-size: 0.8rem; margin-top: 10px;'>Developed for comprehensive financial pattern analysis and behavioral prediction.</p>
     </div>
     """, unsafe_allow_html=True)
 
