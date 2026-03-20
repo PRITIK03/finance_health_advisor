@@ -228,7 +228,7 @@ def main():
     page = st.sidebar.radio(
         "Select Section",
         ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"]
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"]
     )
     
     # Sidebar Info
@@ -722,6 +722,86 @@ def main():
                             st.markdown("")
             else:
                 st.warning("No users found in the selected cohort.")
+
+    # ============ GOAL PLANNER ============
+    elif page == "🎯 Goal Planner":
+        st.header("Financial Goal Roadmap")
+        
+        st.info("Plan your financial milestones and see when you'll reach them based on your current savings profile.")
+        
+        # User selector for profile baseline
+        selected_user_id = st.selectbox(
+            "Select a User Profile for Planning",
+            users_df['user_id'].unique(),
+            format_func=lambda x: f"User {x}"
+        )
+        
+        user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+        
+        # Goal inputs
+        with st.container():
+            st.markdown("<p class='card-title'>Define Your Goal</p>", unsafe_allow_html=True)
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                goal_type = st.selectbox("Goal Type", ["Emergency Fund", "Car", "Home Downpayment", "Travel", "Custom"])
+                target_amount = st.number_input("Target Amount ($)", 1000, 1000000, 10000)
+            
+            with col2:
+                current_savings_rate = user_row['monthly_savings']
+                extra_monthly = st.slider("Additional Monthly Savings ($)", 0, 2000, 0)
+                total_monthly_savings = current_savings_rate + extra_monthly
+
+        # Calculation
+        months_to_reach = target_amount / total_monthly_savings if total_monthly_savings > 0 else float('inf')
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Display Roadmap
+        if months_to_reach != float('inf'):
+            years = int(months_to_reach // 12)
+            months = int(months_to_reach % 12)
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Total Monthly Savings", f"${total_monthly_savings:,.0f}", delta=f"${extra_monthly:,.0f}")
+            with col2:
+                st.metric("Time to Reach Goal", f"{years}y {months}m")
+            with col3:
+                # Calculate optimization
+                boost_savings = total_monthly_savings * 1.2
+                boost_months = target_amount / boost_savings
+                time_saved = months_to_reach - boost_months
+                st.metric("Time Saved with 20% Boost", f"{int(time_saved)} months", delta="Optimized", delta_color="normal")
+
+            # Visual Roadmap
+            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+            st.markdown("<p class='card-title'>Achievement Timeline</p>", unsafe_allow_html=True)
+            
+            timeline_months = list(range(1, int(min(months_to_reach + 6, 60)) + 1))
+            savings_over_time = [total_monthly_savings * m for m in timeline_months]
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=timeline_months, y=savings_over_time, fill='tozeroy', name='Savings Growth', line=dict(color='#3b82f6')))
+            fig.add_hline(y=target_amount, line_dash="dash", line_color="#ef4444", annotation_text="Goal Target")
+            
+            fig.update_layout(
+                template="plotly_white",
+                xaxis_title="Months from Now",
+                yaxis_title="Total Savings ($)",
+                margin=dict(t=20, b=20, l=20, r=20)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Actionable Roadmap
+            st.success(f"### Success Roadmap for your {goal_type}")
+            st.write(f"Based on your current savings rate of **${total_monthly_savings:,.0f}/month**, you will reach your **${target_amount:,.0f}** goal in **{years} years and {months} months**.")
+            
+            st.info(f"**💡 Pro Tip:** If you reduce your discretionary spending (Entertainment/Shopping) by just 15%, you could reach your goal **{int(months_to_reach * 0.15)} months earlier**.")
+        else:
+            st.error("Please ensure your monthly savings is greater than 0 to reach your goal.")
 
     # ============ PEER BENCHMARKING ============
     elif page == "👥 Peer Benchmarking":
