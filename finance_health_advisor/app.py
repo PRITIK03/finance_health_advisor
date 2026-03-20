@@ -744,7 +744,10 @@ def main():
         from preprocessing import prepare_clustering_data
         clustering_data = prepare_clustering_data(users_df)
         
-        similar_indices = pipeline.similar_users_model.find_similar(clustering_data.values, user_idx, n=5)
+        # Get integer position for KNN search
+        user_pos = users_df.index.get_loc(user_idx)
+        
+        similar_indices = pipeline.similar_users_model.find_similar(clustering_data.values, user_pos, n=5)
         similar_users = users_df.iloc[similar_indices]
         
         # Peer comparison metrics
@@ -842,12 +845,11 @@ def main():
         sim_features['loan_to_income'] = sim_features['monthly_loan_payments'] / sim_features['monthly_income'].replace(0, 1)
         
         # Ensure correct column order for classifier
-        # Get the feature columns from the classification model's feature importance
-        X_class_cols, _, _ = prepare_classification_data(users_processed)
-        sim_features = sim_features[X_class_cols.columns]
+        # Use the stored feature names from the model
+        sim_features = sim_features[pipeline.classification_model.feature_names]
         
         # Predict risk
-        sim_risk_idx = pipeline.classification_model.predict(sim_features.values)[0]
+        sim_risk_idx = pipeline.classification_model.predict(sim_features)[0]
         # Label encoder mapping
         _, _, le = prepare_classification_data(users_df)
         sim_risk_label = le.inverse_transform([sim_risk_idx])[0]

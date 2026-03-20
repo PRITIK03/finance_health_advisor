@@ -8,7 +8,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
 from sklearn.ensemble import IsolationForest as SklearnIsolationForest
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import NearestNeighbors
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (classification_report, confusion_matrix, 
@@ -67,10 +67,12 @@ class RiskClassificationModel:
         )
         self.scaler = StandardScaler()
         self.feature_importance = None
+        self.feature_names = None
         
-    def fit(self, X: np.ndarray, y: np.ndarray) -> None:
+    def fit(self, X: pd.DataFrame, y: np.ndarray) -> None:
         """Train the model."""
-        X_scaled = self.scaler.fit_transform(X)
+        self.feature_names = X.columns.tolist()
+        X_scaled = self.scaler.fit_transform(X.values)
         self.model.fit(X_scaled, y)
         self.feature_importance = dict(
             zip(range(X.shape[1]), self.model.feature_importances_)
@@ -78,7 +80,9 @@ class RiskClassificationModel:
     
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Make predictions."""
-        X_scaled = self.scaler.transform(X)
+        # Ensure X is numpy array for scaler
+        X_vals = X.values if isinstance(X, pd.DataFrame) else X
+        X_scaled = self.scaler.transform(X_vals)
         return self.model.predict(X_scaled)
     
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
@@ -160,17 +164,17 @@ class AnomalyDetectionModel:
 
 
 class SimilarUsersModel:
-    """K-Nearest Neighbors for finding similar financial profiles."""
+    """Nearest Neighbors for finding similar financial profiles."""
     
     def __init__(self, n_neighbors: int = 5):
         self.n_neighbors = n_neighbors
-        self.model = KNeighborsClassifier(n_neighbors=n_neighbors)
+        self.model = NearestNeighbors(n_neighbors=n_neighbors, metric='euclidean')
         self.scaler = StandardScaler()
         
-    def fit(self, X: np.ndarray, y: np.ndarray) -> None:
-        """Train the model."""
+    def fit(self, X: np.ndarray) -> None:
+        """Fit the model."""
         X_scaled = self.scaler.fit_transform(X)
-        self.model.fit(X_scaled, y)
+        self.model.fit(X_scaled)
     
     def find_similar(self, X: np.ndarray, user_idx: int, n: int = 5) -> np.ndarray:
         """Find n most similar users."""
@@ -202,7 +206,7 @@ class FinancialMLPipeline:
         self.clustering_model = FinancialClusteringModel(n_clusters)
         return self.clustering_model.fit_predict(X)
     
-    def run_classification(self, X: np.ndarray, y: np.ndarray) -> dict:
+    def run_classification(self, X: pd.DataFrame, y: np.ndarray) -> dict:
         """Run classification model."""
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42, stratify=y
@@ -211,8 +215,8 @@ class FinancialMLPipeline:
         self.classification_model = RiskClassificationModel()
         self.classification_model.fit(X_train, y_train)
         
-        train_metrics = self.classification_model.evaluate(X_train, y_train)
-        test_metrics = self.classification_model.evaluate(X_test, y_test)
+        train_metrics = self.classification_model.evaluate(X_train.values, y_train)
+        test_metrics = self.classification_model.evaluate(X_test.values, y_test)
         
         return {
             'train_metrics': train_metrics,
@@ -244,16 +248,14 @@ class FinancialMLPipeline:
     def run_similar_users_search(self, X: np.ndarray) -> None:
         """Initialize and fit the similar users model."""
         self.similar_users_model = SimilarUsersModel(n_neighbors=10)
-        # For KNN unsupervised, we just need the features
-        self.similar_users_model.fit(X, np.zeros(X.shape[0]))
+        self.similar_users_model.fit(X)
 
 
-def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> dict:
-    """Train all models and return results."""
+def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> tuple:
+    """Train all models and return results and pipeline."""
     
     from preprocessing import (prepare_clustering_data, prepare_classification_data,
                               prepare_regression_data)
-    from sklearn.preprocessing import StandardScaler
     
     results = {}
     
@@ -267,36 +269,37 @@ def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> dict:
     users_df = preprocessor.preprocess_users(users_df)
     monthly_df = preprocessor.preprocess_monthly(monthly_df)
     
-    # 1. Clustering
-    print("\n[1/4] Training K-Means Clustering...")
-    clustering_data = prepare_clustering_data(users_df)
     pipeline = FinancialMLPipeline()
+
+    # 1. Clustering
+    print("\n[1/5] Training K-Means Clustering...")
+    clustering_data = prepare_clustering_data(users_df)
     clusters = pipeline.run_clustering(clustering_data.values, n_clusters=5)
     users_df['cluster'] = clusters
     
-    print(f"   âœ“ Clustered {len(users_df)} users into 5 segments")
+    print(f"   * Clustered {len(users_df)} users into 5 segments")
     silhouette = pipeline.clustering_model.get_silhouette_score(clustering_data.values)
-    print(f"   âœ“ Silhouette Score: {silhouette:.4f}")
+    print(f"   * Silhouette Score: {silhouette:.4f}")
     results['silhouette'] = silhouette
     
     # 2. Classification
-    print("\n[2/4] Training Random Forest Classifier...")
+    print("\n[2/5] Training Random Forest Classifier...")
     X_class, y_class, label_encoder = prepare_classification_data(users_df)
-    results['classification'] = pipeline.run_classification(X_class.values, y_class)
+    results['classification'] = pipeline.run_classification(X_class, y_class)
     
-    print(f"   âœ“ Test Accuracy: {results['classification']['test_metrics']['accuracy']:.4f}")
-    print(f"   âœ“ CV Score: {results['classification']['test_metrics']['cv_mean']:.4f} Â+/- {results['classification']['test_metrics']['cv_std']:.4f}")
+    print(f"   * Test Accuracy: {results['classification']['test_metrics']['accuracy']:.4f}")
+    print(f"   * CV Score: {results['classification']['test_metrics']['cv_mean']:.4f}")
     
     # 3. Forecasting
-    print("\n[3/4] Training Gradient Boosting Regressor...")
+    print("\n[3/5] Training Gradient Boosting Regressor...")
     X_reg, y_reg = prepare_regression_data(monthly_df)
     results['forecasting'] = pipeline.run_forecasting(X_reg.values, y_reg)
     
-    print(f"   âœ“ Test RÂ2 Score: {results['forecasting']['test_metrics']['r2']:.4f}")
-    print(f"   âœ“ Test RMSE: ${results['forecasting']['test_metrics']['rmse']:.2f}")
+    print(f"   * Test R2 Score: {results['forecasting']['test_metrics']['r2']:.4f}")
+    print(f"   * Test RMSE: ${results['forecasting']['test_metrics']['rmse']:.2f}")
     
     # 4. Anomaly Detection
-    print("\n[4/4] Training Isolation Forest...")
+    print("\n[4/5] Training Isolation Forest...")
     spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 
                     'Entertainment', 'Shopping', 'Education', 'Subscriptions',
                     'Insurance', 'Miscellaneous']
@@ -305,12 +308,12 @@ def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> dict:
     monthly_df['ml_anomaly'] = (anomalies == -1).astype(int)
     
     anomaly_count = (anomalies == -1).sum()
-    print(f"   - Detected {anomaly_count} anomalies ({anomaly_count/len(monthly_df)*100:.2f}%)")
+    print(f"   * Detected {anomaly_count} anomalies ({anomaly_count/len(monthly_df)*100:.2f}%)")
     
     # 5. Similar Users Search (KNN)
     print("\n[5/5] Initializing Peer Comparison Model (KNN)...")
     pipeline.run_similar_users_search(clustering_data.values)
-    print("   âœ“ Peer Comparison Model ready")
+    print("   * Peer Comparison Model ready")
     
     print("\n" + "=" * 60)
     print("ALL MODELS TRAINED SUCCESSFULLY!")
