@@ -228,7 +228,7 @@ def main():
     page = st.sidebar.radio(
         "Select Section",
         ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "� Scenario Simulator", "� Data Explorer"]
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"]
     )
     
     # Sidebar Info
