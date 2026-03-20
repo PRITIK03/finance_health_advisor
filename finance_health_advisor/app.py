@@ -723,8 +723,71 @@ def main():
             else:
                 st.warning("No users found in the selected cohort.")
 
+    # ============ PEER BENCHMARKING ============
+    elif page == "👥 Peer Benchmarking":
+        st.header("Peer Benchmarking Analysis")
+        
+        st.info("Compare your financial profile with similar users in our database to see where you stand.")
+        
+        # User selector
+        selected_user_id = st.selectbox(
+            "Select a User to Analyze",
+            users_df['user_id'].unique(),
+            format_func=lambda x: f"User {x}"
+        )
+        
+        user_idx = users_df[users_df['user_id'] == selected_user_id].index[0]
+        user_data = users_df.iloc[user_idx]
+        
+        # Find similar users using KNN
+        # Prepare data for KNN (must match clustering features)
+        from preprocessing import prepare_clustering_data
+        clustering_data = prepare_clustering_data(users_df)
+        
+        similar_indices = pipeline.similar_users_model.find_similar(clustering_data.values, user_idx, n=5)
+        similar_users = users_df.iloc[similar_indices]
+        
+        # Peer comparison metrics
+        peers_avg = similar_users.mean(numeric_only=True)
+        
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            with st.container():
+                st.markdown("<p class='card-title'>Peer Comparison Radar</p>", unsafe_allow_html=True)
+                st.plotly_chart(visualizer.create_peer_comparison_radar(user_data, peers_avg), use_container_width=True)
+        
+        with col2:
+            with st.container():
+                st.markdown("<p class='card-title'>Benchmarking Insights</p>", unsafe_allow_html=True)
+                
+                # Comparison items
+                comp_items = [
+                    ('Income', 'monthly_income', '$'),
+                    ('Savings', 'monthly_savings', '$'),
+                    ('Health Score', 'financial_health_score', ''),
+                    ('Credit Score', 'credit_score', '')
+                ]
+                
+                for label, col, unit in comp_items:
+                    u_val = user_data[col]
+                    p_val = peers_avg[col]
+                    diff = (u_val - p_val) / p_val * 100 if p_val != 0 else 0
+                    
+                    color = "#10b981" if u_val >= p_val else "#ef4444"
+                    icon = "🟢" if u_val >= p_val else "🔴"
+                    
+                    st.markdown(f"""
+                    **{label}**: {unit}{u_val:,.1f} vs Peer Avg {unit}{p_val:,.1f} 
+                    <span style='color: {color}; font-weight: bold;'>({icon} {diff:+.1f}%)</span>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("---")
+                st.markdown(f"**Similar Users Found**: {len(similar_users)}")
+                st.dataframe(similar_users[['user_id', 'age', 'employment_type', 'financial_health_score', 'risk_label']], use_container_width=True)
+
     # ============ SCENARIO SIMULATOR ============
-    elif page == "� Scenario Simulator":
+    elif page == "🔮 Scenario Simulator":
         st.header("Financial Scenario Simulator")
         
         st.info("Simulate how changes in your income, expenses, and debt would affect your overall financial health score and risk category.")
