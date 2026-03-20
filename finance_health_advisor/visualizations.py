@@ -425,6 +425,71 @@ class FinancialVisualizer:
         )
         
         return fig
+
+    def create_peer_comparison_radar(self, user_data: pd.Series, peers_avg: pd.Series) -> go.Figure:
+        """Create a radar chart comparing a user to their peers."""
+        
+        categories = ['Income', 'Expenses', 'Savings', 'Investments', 'Credit Score', 'Health Score']
+        
+        # Normalize values for radar chart (roughly 0-100 scale)
+        def normalize(val, max_val):
+            return min(100, (val / max_val * 100)) if max_val > 0 else 0
+
+        # Estimate max values for normalization
+        max_income = self.users_df['monthly_income'].quantile(0.95)
+        max_expenses = self.users_df['monthly_expenses'].quantile(0.95)
+        max_savings = self.users_df['monthly_savings'].quantile(0.95)
+        max_investments = self.users_df['monthly_investments'].quantile(0.95)
+
+        user_values = [
+            normalize(user_data['monthly_income'], max_income),
+            normalize(user_data['monthly_expenses'], max_expenses),
+            normalize(user_data['monthly_savings'], max_savings),
+            normalize(user_data['monthly_investments'], max_investments),
+            (user_data['credit_score'] - 300) / 5.5, # 300-850 to 0-100
+            user_data['financial_health_score']
+        ]
+        
+        peer_values = [
+            normalize(peers_avg['monthly_income'], max_income),
+            normalize(peers_avg['monthly_expenses'], max_expenses),
+            normalize(peers_avg['monthly_savings'], max_savings),
+            normalize(peers_avg['monthly_investments'], max_investments),
+            (peers_avg['credit_score'] - 300) / 5.5,
+            peers_avg['financial_health_score']
+        ]
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatterpolar(
+            r=user_values,
+            theta=categories,
+            fill='toself',
+            name='You',
+            line_color='#2563eb'
+        ))
+        
+        fig.add_trace(go.Scatterpolar(
+            r=peer_values,
+            theta=categories,
+            fill='toself',
+            name='Peer Average',
+            line_color='#94a3b8'
+        ))
+
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100]
+                )),
+            showlegend=True,
+            template=MODERN_TEMPLATE,
+            title='Peer Comparison Radar',
+            margin=dict(t=50, b=50, l=50, r=50)
+        )
+
+        return fig
     
     def create_all_visualizations(self) -> dict:
         """Create all visualizations and return as dict."""

@@ -240,6 +240,12 @@ class FinancialMLPipeline:
         """Run anomaly detection."""
         self.anomaly_model = AnomalyDetectionModel(contamination=0.02)
         return self.anomaly_model.fit_predict(X)
+    
+    def run_similar_users_search(self, X: np.ndarray) -> None:
+        """Initialize and fit the similar users model."""
+        self.similar_users_model = SimilarUsersModel(n_neighbors=10)
+        # For KNN unsupervised, we just need the features
+        self.similar_users_model.fit(X, np.zeros(X.shape[0]))
 
 
 def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> dict:
@@ -300,6 +306,11 @@ def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> dict:
     
     anomaly_count = (anomalies == -1).sum()
     print(f"   - Detected {anomaly_count} anomalies ({anomaly_count/len(monthly_df)*100:.2f}%)")
+    
+    # 5. Similar Users Search (KNN)
+    print("\n[5/5] Initializing Peer Comparison Model (KNN)...")
+    pipeline.run_similar_users_search(clustering_data.values)
+    print("   âœ“ Peer Comparison Model ready")
     
     print("\n" + "=" * 60)
     print("ALL MODELS TRAINED SUCCESSFULLY!")
