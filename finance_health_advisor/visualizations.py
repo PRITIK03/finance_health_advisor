@@ -490,6 +490,63 @@ class FinancialVisualizer:
         )
 
         return fig
+
+    def create_wealth_projection_chart(self, simulation_results: np.ndarray, years: int) -> go.Figure:
+        """Create a fan chart for Monte Carlo wealth projection."""
+        
+        # Calculate percentiles
+        median = np.median(simulation_results, axis=0)
+        p10 = np.percentile(simulation_results, 10, axis=0)
+        p25 = np.percentile(simulation_results, 25, axis=0)
+        p75 = np.percentile(simulation_results, 75, axis=0)
+        p90 = np.percentile(simulation_results, 90, axis=0)
+        
+        x = list(range(years + 1))
+        
+        fig = go.Figure()
+        
+        # Add 10th-90th percentile area
+        fig.add_trace(go.Scatter(
+            x=x + x[::-1],
+            y=list(p90) + list(p10)[::-1],
+            fill='toself',
+            fillcolor='rgba(37, 99, 235, 0.1)',
+            line=dict(color='rgba(255,255,255,0)'),
+            name='10th-90th Percentile',
+            hoverinfo='skip'
+        ))
+        
+        # Add 25th-75th percentile area
+        fig.add_trace(go.Scatter(
+            x=x + x[::-1],
+            y=list(p75) + list(p25)[::-1],
+            fill='toself',
+            fillcolor='rgba(37, 99, 235, 0.2)',
+            line=dict(color='rgba(255,255,255,0)'),
+            name='25th-75th Percentile',
+            hoverinfo='skip'
+        ))
+        
+        # Add Median line
+        fig.add_trace(go.Scatter(
+            x=x,
+            y=median,
+            line=dict(color='#2563eb', width=3),
+            name='Median Projection'
+        ))
+        
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            title='Monte Carlo Wealth Projection (Fan Chart)',
+            xaxis_title='Years from Now',
+            yaxis_title='Projected Wealth ($)',
+            hovermode='x unified',
+            showlegend=True,
+            margin=dict(t=50, b=20, l=20, r=20),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        return fig
     
     def create_all_visualizations(self) -> dict:
         """Create all visualizations and return as dict."""

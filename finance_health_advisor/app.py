@@ -228,7 +228,7 @@ def main():
     page = st.sidebar.radio(
         "Select Section",
         ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"]
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"]
     )
     
     # Sidebar Info
@@ -802,6 +802,85 @@ def main():
             st.info(f"**💡 Pro Tip:** If you reduce your discretionary spending (Entertainment/Shopping) by just 15%, you could reach your goal **{int(months_to_reach * 0.15)} months earlier**.")
         else:
             st.error("Please ensure your monthly savings is greater than 0 to reach your goal.")
+
+    # ============ WEALTH PROJECTION ============
+    elif page == "🚀 Wealth Projection":
+        st.header("Wealth & Retirement Projection")
+        
+        st.info("Monte Carlo simulation projects your future wealth based on savings, investments, and market volatility.")
+        
+        # User selector
+        selected_user_id = st.selectbox(
+            "Select User Profile",
+            users_df['user_id'].unique(),
+            format_func=lambda x: f"User {x}"
+        )
+        user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+        
+        # Simulation Parameters
+        with st.container():
+            st.markdown("<p class='card-title'>Simulation Settings</p>", unsafe_allow_html=True)
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                projection_years = st.slider("Projection Horizon (Years)", 5, 40, 25)
+                initial_wealth = st.number_input("Current Assets ($)", 0, 1000000, int(user_row['monthly_savings'] * 12))
+            
+            with col2:
+                avg_return = st.slider("Expected Annual Return (%)", 1.0, 15.0, 7.0) / 100
+                volatility = st.slider("Market Volatility (%)", 5.0, 30.0, 15.0) / 100
+                
+            with col3:
+                monthly_contribution = st.number_input("Monthly Contribution ($)", 0, 20000, int(user_row['monthly_savings']))
+                num_simulations = st.selectbox("Number of Simulations", [100, 500, 1000], index=1)
+
+        # Monte Carlo Simulation Logic
+        # Result matrix: [simulations, years + 1]
+        results_mc = np.zeros((num_simulations, projection_years + 1))
+        results_mc[:, 0] = initial_wealth
+        
+        for i in range(num_simulations):
+            current_wealth = initial_wealth
+            for year in range(1, projection_years + 1):
+                # Annualized return with volatility
+                yearly_return = np.random.normal(avg_return, volatility)
+                
+                # Add monthly contributions (simplified as yearly)
+                current_wealth = (current_wealth + monthly_contribution * 12) * (1 + yearly_return)
+                results_mc[i, year] = max(0, current_wealth)
+        
+        # Results Display
+        st.markdown("<br>", unsafe_allow_html=True)
+        median_final = np.median(results_mc[:, -1])
+        p10_final = np.percentile(results_mc[:, -1], 10)
+        p90_final = np.percentile(results_mc[:, -1], 90)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Median Wealth (25y)", f"${median_final:,.0f}")
+        with col2:
+            st.metric("Pessimistic (10%)", f"${p10_final:,.0f}")
+        with col3:
+            st.metric("Optimistic (90%)", f"${p90_final:,.0f}")
+            
+        # Chart
+        with st.container():
+            st.plotly_chart(visualizer.create_wealth_projection_chart(results_mc, projection_years), use_container_width=True)
+            
+        # Insights
+        with st.container():
+            st.markdown("<p class='card-title'>Retirement Readiness</p>", unsafe_allow_html=True)
+            
+            # Simplified 4% rule check
+            annual_withdrawal = median_final * 0.04
+            monthly_income_potential = annual_withdrawal / 12
+            
+            st.write(f"Based on the median projection, your wealth could generate approximately **${monthly_income_potential:,.0f}/month** in retirement (using the 4% rule).")
+            
+            if monthly_income_potential < user_row['monthly_expenses']:
+                st.warning(f"Your projected retirement income is less than your current expenses (${user_row['monthly_expenses']:,.0f}). Consider increasing your monthly contributions.")
+            else:
+                st.success(f"Your projected retirement income exceeds your current expenses! You are on a strong path to financial independence.")
 
     # ============ PEER BENCHMARKING ============
     elif page == "👥 Peer Benchmarking":
