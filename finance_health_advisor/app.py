@@ -83,14 +83,19 @@ def main():
         margin-bottom: 5px !important;
     }
     
-    /* Container styling (using st.container()) */
+    /* Container styling (using st.container(border=True)) */
     [data-testid="stVerticalBlockBorderWrapper"] {
         background-color: white !important;
         border-radius: 16px !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
         border: 1px solid #e2e8f0 !important;
         margin-bottom: 24px !important;
-        padding: 10px !important;
+        padding: 1.5rem !important;
+    }
+
+    /* Target specific nested containers if needed */
+    .stVerticalBlock {
+        gap: 1.5rem !important;
     }
 
     /* Legacy Card for backward compatibility or direct HTML */
@@ -284,31 +289,31 @@ def main():
         with tab1:
             col1, col2 = st.columns(2)
             with col1:
-                with st.container():
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_risk_analysis_plot(), use_container_width=True)
             
             with col2:
-                with st.container():
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_spending_breakdown_chart(), use_container_width=True)
             
-            with st.container():
+            with st.container(border=True):
                 st.plotly_chart(visualizer.create_time_series_plot(), use_container_width=True)
                 
         with tab2:
             col1, col2 = st.columns(2)
             with col1:
-                with st.container():
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_income_expense_scatter(), use_container_width=True)
             
             with col2:
-                with st.container():
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_employment_analysis(), use_container_width=True)
                     
-            with st.container():
+            with st.container(border=True):
                 st.plotly_chart(visualizer.create_correlation_heatmap(), use_container_width=True)
                 
         with tab3:
-            with st.container():
+            with st.container(border=True):
                 st.subheader("Recent Financial Snapshot")
                 st.dataframe(users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score']].head(20), use_container_width=True)
     
@@ -324,18 +329,18 @@ def main():
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                with st.container():
+                with st.container(border=True):
                     st.plotly_chart(visualizer.create_cluster_analysis_plot(), use_container_width=True)
                 
             with col2:
-                with st.container():
+                with st.container(border=True):
                     st.markdown("<p class='card-title'>Cluster Distribution</p>", unsafe_allow_html=True)
                     cluster_counts = users_df['cluster'].value_counts().sort_index()
                     for i, count in cluster_counts.items():
                         st.write(f"**Cluster {i}:** {count} users")
         
         with tab2:
-            with st.container():
+            with st.container(border=True):
                 st.subheader("Cluster Profiles")
                 cluster_stats = users_df.groupby('cluster').agg({
                     'monthly_income': 'mean',
@@ -352,7 +357,7 @@ def main():
             for i, cluster_id in enumerate(sorted(users_df['cluster'].unique())):
                 with cols[i % 3]:
                     cluster_data = users_df[users_df['cluster'] == cluster_id]
-                    with st.container():
+                    with st.container(border=True):
                         st.markdown(f"<p class='card-title'>Profile {cluster_id}</p>", unsafe_allow_html=True)
                         st.markdown(f"""
                         <div class='sidebar-text'>
@@ -384,7 +389,7 @@ def main():
         with tab1:
             col1, col2 = st.columns([1, 1])
             with col1:
-                with st.container():
+                with st.container(border=True):
                     st.markdown("<p class='card-title'>Risk Distribution</p>", unsafe_allow_html=True)
                     risk_counts = users_df['risk_label'].value_counts()
                     colors = {'Very Low': '#2ecc71', 'Low': '#27ae60', 'Medium': '#f1c40f', 
@@ -405,7 +410,7 @@ def main():
                     st.plotly_chart(fig, use_container_width=True)
                 
             with col2:
-                with st.container():
+                with st.container(border=True):
                     st.markdown("<p class='card-title'>Risk Insights</p>", unsafe_allow_html=True)
                     st.markdown(f"""
                     <div class='sidebar-text'>
@@ -422,7 +427,7 @@ def main():
                     """, unsafe_allow_html=True)
                 
         with tab2:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Feature Importance</p>", unsafe_allow_html=True)
                 X_class, y_class, le = prepare_classification_data(users_processed)
                 
@@ -471,7 +476,7 @@ def main():
         tab1, tab2 = st.tabs(["📈 Trends", "📊 Segment Analysis"])
         
         with tab1:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Monthly Savings Trends</p>", unsafe_allow_html=True)
                 
                 monthly_avg = monthly_df.groupby('month').agg({
@@ -515,7 +520,7 @@ def main():
                 st.plotly_chart(fig, use_container_width=True)
             
         with tab2:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Savings Patterns by Risk Category</p>", unsafe_allow_html=True)
                 
                 savings_by_risk = monthly_df.groupby('risk_label')['savings'].mean().sort_values()
@@ -552,11 +557,11 @@ def main():
         tab1, tab2 = st.tabs(["🚨 Visual Analysis", "📋 Detected Anomalies"])
         
         with tab1:
-            with st.container():
+            with st.container(border=True):
                 st.plotly_chart(visualizer.create_anomaly_analysis_plot(), use_container_width=True)
             
         with tab2:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Sample of Flagged Transactions</p>", unsafe_allow_html=True)
                 
                 anomalies = monthly_df[monthly_df['ml_anomaly'] == 1]
@@ -608,7 +613,7 @@ def main():
             tab1, tab2, tab3, tab4 = st.tabs(["💰 Budget", "💳 Debt", "🏦 Savings", "📈 Investments"])
             
             with tab1:
-                with st.container():
+                with st.container(border=True):
                     st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
                     for rec in user_recs['budget']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
@@ -617,7 +622,7 @@ def main():
                         st.markdown("")
             
             with tab2:
-                with st.container():
+                with st.container(border=True):
                     st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
                     for rec in user_recs['debt']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
@@ -626,7 +631,7 @@ def main():
                         st.markdown("")
             
             with tab3:
-                with st.container():
+                with st.container(border=True):
                     st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
                     for rec in user_recs['savings']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
@@ -635,7 +640,7 @@ def main():
                         st.markdown("")
             
             with tab4:
-                with st.container():
+                with st.container(border=True):
                     st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
                     for rec in user_recs['investments']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
@@ -686,7 +691,7 @@ def main():
                 all_recs = cohort_recs['recommendations']
                 
                 with tab1:
-                    with st.container():
+                    with st.container(border=True):
                         st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
                         for rec in all_recs['budget']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
@@ -695,7 +700,7 @@ def main():
                             st.markdown("")
                 
                 with tab2:
-                    with st.container():
+                    with st.container(border=True):
                         st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
                         for rec in all_recs['debt']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
@@ -704,7 +709,7 @@ def main():
                             st.markdown("")
                 
                 with tab3:
-                    with st.container():
+                    with st.container(border=True):
                         st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
                         for rec in all_recs['savings']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
@@ -713,7 +718,7 @@ def main():
                             st.markdown("")
                 
                 with tab4:
-                    with st.container():
+                    with st.container(border=True):
                         st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
                         for rec in all_recs['investments']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
@@ -739,7 +744,7 @@ def main():
         user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
         
         # Goal inputs
-        with st.container():
+        with st.container(border=True):
             st.markdown("<p class='card-title'>Define Your Goal</p>", unsafe_allow_html=True)
             col1, col2 = st.columns(2)
             
@@ -776,24 +781,23 @@ def main():
                 st.metric("Time Saved with 20% Boost", f"{int(time_saved)} months", delta="Optimized", delta_color="normal")
 
             # Visual Roadmap
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown("<p class='card-title'>Achievement Timeline</p>", unsafe_allow_html=True)
-            
-            timeline_months = list(range(1, int(min(months_to_reach + 6, 60)) + 1))
-            savings_over_time = [total_monthly_savings * m for m in timeline_months]
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=timeline_months, y=savings_over_time, fill='tozeroy', name='Savings Growth', line=dict(color='#3b82f6')))
-            fig.add_hline(y=target_amount, line_dash="dash", line_color="#ef4444", annotation_text="Goal Target")
-            
-            fig.update_layout(
-                template="plotly_white",
-                xaxis_title="Months from Now",
-                yaxis_title="Total Savings ($)",
-                margin=dict(t=20, b=20, l=20, r=20)
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Achievement Timeline</p>", unsafe_allow_html=True)
+                
+                timeline_months = list(range(1, int(min(months_to_reach + 6, 60)) + 1))
+                savings_over_time = [total_monthly_savings * m for m in timeline_months]
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=timeline_months, y=savings_over_time, fill='tozeroy', name='Savings Growth', line=dict(color='#3b82f6')))
+                fig.add_hline(y=target_amount, line_dash="dash", line_color="#ef4444", annotation_text="Goal Target")
+                
+                fig.update_layout(
+                    template="plotly_white",
+                    xaxis_title="Months from Now",
+                    yaxis_title="Total Savings ($)",
+                    margin=dict(t=20, b=20, l=20, r=20)
+                )
+                st.plotly_chart(fig, use_container_width=True)
             
             # Actionable Roadmap
             st.success(f"### Success Roadmap for your {goal_type}")
@@ -818,7 +822,7 @@ def main():
         user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
         
         # Simulation Parameters
-        with st.container():
+        with st.container(border=True):
             st.markdown("<p class='card-title'>Simulation Settings</p>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns(3)
             
@@ -864,11 +868,11 @@ def main():
             st.metric("Optimistic (90%)", f"${p90_final:,.0f}")
             
         # Chart
-        with st.container():
+        with st.container(border=True):
             st.plotly_chart(visualizer.create_wealth_projection_chart(results_mc, projection_years), use_container_width=True)
             
         # Insights
-        with st.container():
+        with st.container(border=True):
             st.markdown("<p class='card-title'>Retirement Readiness</p>", unsafe_allow_html=True)
             
             # Simplified 4% rule check
@@ -915,12 +919,12 @@ def main():
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Peer Comparison Radar</p>", unsafe_allow_html=True)
                 st.plotly_chart(visualizer.create_peer_comparison_radar(user_data, peers_avg), use_container_width=True)
         
         with col2:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Benchmarking Insights</p>", unsafe_allow_html=True)
                 
                 # Comparison items
@@ -955,7 +959,7 @@ def main():
         st.info("Simulate how changes in your income, expenses, and debt would affect your overall financial health score and risk category.")
         
         # Simulator inputs
-        with st.container():
+        with st.container(border=True):
             st.markdown("<p class='card-title'>Simulation Parameters</p>", unsafe_allow_html=True)
             
             col1, col2, col3 = st.columns(3)
@@ -1018,7 +1022,7 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Predicted Health Score</p>", unsafe_allow_html=True)
                 st.markdown(f"<h1 style='text-align: center; color: #2563eb;'>{sim_health_score:.1f}</h1>", unsafe_allow_html=True)
                 
@@ -1032,7 +1036,7 @@ def main():
                 """, unsafe_allow_html=True)
                 
         with col2:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Comparison to Average</p>", unsafe_allow_html=True)
                 
                 # Comparison metrics
@@ -1047,7 +1051,7 @@ def main():
         
         # Actionable insights for simulator
         st.markdown("<br>", unsafe_allow_html=True)
-        with st.container():
+        with st.container(border=True):
             st.markdown("<p class='card-title'>Simulation Insights</p>", unsafe_allow_html=True)
             
             if sim_health_score < 50:
@@ -1068,7 +1072,7 @@ def main():
         data_choice = st.selectbox("Select Dataset", ["User Profiles", "Monthly Transactions"])
         
         if data_choice == "User Profiles":
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>User Profiles Filter</p>", unsafe_allow_html=True)
                 
                 # Filters
@@ -1093,7 +1097,7 @@ def main():
                 st.write(f"Showing {len(filtered)} of {len(users_df)} users")
             
         else:
-            with st.container():
+            with st.container(border=True):
                 st.markdown("<p class='card-title'>Monthly Transactions Filter</p>", unsafe_allow_html=True)
                 
                 # Month selector
@@ -1106,7 +1110,7 @@ def main():
         
         # Statistics
         st.markdown("<br>", unsafe_allow_html=True)
-        with st.container():
+        with st.container(border=True):
             st.markdown("<p class='card-title'>Statistical Summary</p>", unsafe_allow_html=True)
             
             if data_choice == "User Profiles":
