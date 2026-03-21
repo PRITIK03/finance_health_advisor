@@ -93,6 +93,21 @@ def main():
         padding: 1.5rem !important;
     }
 
+    /* Fix Plotly chart backgrounds */
+    .js-plotly-plot .plotly .bg {
+        fill: transparent !important;
+    }
+
+    /* Fix Sidebar padding and width */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-right: 1px solid #e2e8f0;
+    }
+
+    [data-testid="stSidebarNav"] {
+        padding-top: 2rem !important;
+    }
+
     /* Target specific nested containers if needed */
     .stVerticalBlock {
         gap: 1.5rem !important;
