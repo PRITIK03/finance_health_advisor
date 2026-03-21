@@ -49,48 +49,56 @@ def main():
     # Custom CSS
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
     /* Global Styles */
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         color: #1e293b !important;
     }
     
     .stApp {
-        background-color: #f8f9fa !important;
+        background-color: #f1f5f9 !important; /* Slightly more gray for better contrast with white cards */
     }
 
-    /* Fix Metric visibility */
+    /* Fix Metric visibility and layout */
     [data-testid="stMetric"] {
-        background-color: white !important;
-        padding: 20px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        background-color: #ffffff !important;
+        padding: 24px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
         border: 1px solid #e2e8f0 !important;
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
     }
 
     [data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
+        font-size: 2rem !important;
         font-weight: 700 !important;
         color: #0f172a !important;
+        line-height: 1.2 !important;
     }
 
     [data-testid="stMetricLabel"] {
-        font-size: 0.9rem !important;
+        font-size: 0.875rem !important;
         font-weight: 600 !important;
         color: #64748b !important;
-        margin-bottom: 5px !important;
+        margin-bottom: 8px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
     }
     
     /* Container styling (using st.container(border=True)) */
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: white !important;
-        border-radius: 16px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        border: 1px solid #f1f5f9 !important;
         margin-bottom: 24px !important;
-        padding: 1.5rem !important;
+        padding: 2rem !important;
     }
 
     /* Fix Plotly chart backgrounds */
@@ -98,133 +106,134 @@ def main():
         fill: transparent !important;
     }
 
-    /* Fix Sidebar padding and width */
+    /* Fix Sidebar styling */
     [data-testid="stSidebar"] {
         background-color: #ffffff !important;
         border-right: 1px solid #e2e8f0;
     }
+    
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        padding: 2rem 1rem !important;
+    }
 
     [data-testid="stSidebarNav"] {
-        padding-top: 2rem !important;
+        background-color: transparent !important;
+        padding-top: 1rem !important;
     }
 
-    /* Target specific nested containers if needed */
-    .stVerticalBlock {
-        gap: 1.5rem !important;
+    /* Main Content Padding */
+    .block-container {
+        padding: 3rem 4rem !important;
+        max-width: 1200px !important;
+        margin: 0 auto !important;
     }
 
-    /* Legacy Card for backward compatibility or direct HTML */
-    .custom-card {
-        background-color: white;
-        padding: 25px;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        border: 1px solid #e2e8f0;
-        margin-bottom: 25px;
-        color: #1e293b;
+    /* Tab styling - more modern */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 2rem;
     }
-    
+
+    .stTabs [data-baseweb="tab"] {
+        height: 48px;
+        background-color: transparent !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+        font-size: 0.95rem !important;
+        padding: 0 12px !important;
+        border: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .stTabs [aria-selected="true"] {
+        color: #2563eb !important;
+        font-weight: 700 !important;
+        border-bottom: 2px solid #2563eb !important;
+    }
+
+    /* Card Titles and Text */
     .card-title {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         font-weight: 700;
         color: #0f172a;
-        margin-top: 0;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #f1f5f9;
-        padding-bottom: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     
     .sidebar-text {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #475569;
         line-height: 1.6;
     }
     
     .highlight {
         color: #2563eb;
-        font-weight: 700;
-    }
-
-    /* Tab styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 32px;
-        border-bottom: 2px solid #e2e8f0;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        height: 60px;
-        background-color: transparent;
-        color: #64748b;
         font-weight: 600;
-        font-size: 1rem;
-        padding: 0 16px;
     }
 
-    .stTabs [aria-selected="true"] {
-        color: #2563eb !important;
-        border-bottom: 2px solid #2563eb !important;
-    }
-
-    /* Hide redundant elements if any */
+    /* Hide redundant elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    
-    /* Main Content Padding */
-    .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 5rem !important;
-        max-width: 95% !important;
-    }
 
-    /* Ensure text inside markdown and headers is dark */
+    /* Ensure text inside markdown and headers is dark and visible */
     .stMarkdown p, .stMarkdown li, .stMarkdown span, h1, h2, h3, h4, h5, h6 {
         color: #1e293b !important;
+        line-height: 1.6 !important;
     }
     
-    /* Fix Sidebar text visibility */
-    [data-testid="stSidebar"] .stMarkdown p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-        color: #475569 !important;
+    h1 { font-size: 2.25rem !important; font-weight: 800 !important; letter-spacing: -0.025em !important; }
+    h2 { font-size: 1.5rem !important; font-weight: 700 !important; margin-top: 2rem !important; }
+    
+    /* Fix for Streamlit's info/warning boxes */
+    [data-testid="stNotification"] {
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
     }
     
-    /* Fix for Streamlit's info/warning boxes to keep their intended contrast */
     [data-testid="stNotification"] p {
-        color: #1e293b !important;
+        color: inherit !important;
+        font-weight: 500 !important;
+    }
+
+    /* Button Styling */
+    .stButton>button {
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.2s !important;
+    }
+
+    .stDownloadButton>button {
+        background-color: #2563eb !important;
+        color: white !important;
+        border: none !important;
+        width: 100% !important;
+    }
+
+    /* Dataframe rounding */
+    [data-testid="stDataFrame"] {
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        border: 1px solid #e2e8f0 !important;
     }
     </style>
     """, unsafe_allow_html=True)
     
     # Header
-    col1, col2 = st.columns([1, 4])
+    col1, col2 = st.columns([1, 5])
     with col1:
-        st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=100)
+        st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=80)
     with col2:
         st.title("Financial Health Advisor")
-        st.markdown("<p style='font-size: 1.2rem; color: #64748b;'>AI-Powered Insights for Your Financial Future</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 1.1rem; color: #64748b; margin-top: -15px;'>AI-Powered Financial Insights & Behavioral Analysis</p>", unsafe_allow_html=True)
     
-    # Sidebar
-    st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=60)
-    st.sidebar.title("Navigation")
-    
-    # Sidebar Info
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("About")
-    st.sidebar.markdown("""
-    <div class='sidebar-text'>
-    This advisor uses <span class='highlight'>Advanced Machine Learning</span> to analyze financial patterns, 
-    predict risks, and provide actionable insights.
-    <br><br>
-    <b>Key Features:</b>
-    <ul>
-        <li>User Segmentation</li>
-        <li>Risk Prediction</li>
-        <li>Savings Forecasting</li>
-        <li>Anomaly Detection</li>
-        <li>Personalized Recommendations</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
-    
+    st.markdown("<br>", unsafe_allow_html=True)
+
     # Load data
     with st.spinner("Generating synthetic financial data..."):
         users_df, monthly_df = load_data()
@@ -243,39 +252,64 @@ def main():
     
     # Recommendations Engine
     recommendations_engine = RecommendationsEngine(users_df, monthly_df)
-    
-    # Navigation
-    page = st.sidebar.radio(
-        "Select Section",
-        ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"]
-    )
-    
-    # Sidebar Info
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Quick Insights")
-    avg_health = users_df['financial_health_score'].mean()
-    health_status = "Good" if avg_health > 70 else "Fair" if avg_health > 50 else "Poor"
-    
-    st.sidebar.markdown(f"""
-    <div class='sidebar-text'>
-    <b>System Status:</b> <span style='color: #10b981;'>Live</span><br>
-    <b>Avg Health:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
-    <b>Risk Focus:</b> <span class='highlight'>{users_df['risk_label'].mode()[0]}</span><br>
-    <b>Model Accuracy:</b> <span class='highlight'>{results['classification']['test_metrics']['accuracy']:.1%}</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Export Data Button
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Export Analysis")
-    summary_data = users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score', 'risk_label']].to_csv(index=False)
-    st.sidebar.download_button(
-        label="📥 Download User Summary (CSV)",
-        data=summary_data,
-        file_name="financial_health_summary.csv",
-        mime="text/csv",
-    )
+
+    # Sidebar
+    with st.sidebar:
+        st.markdown("<div style='text-align: center; padding-bottom: 20px;'>", unsafe_allow_html=True)
+        st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=80)
+        st.markdown("<h2 style='margin-top: 10px; color: #0f172a;'>Menu</h2>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Navigation
+        page = st.radio(
+            "Go to section:",
+            ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
+             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+            label_visibility="collapsed"
+        )
+        
+        # Sidebar Info
+        st.markdown("---")
+        st.subheader("About Advisor")
+        st.markdown("""
+        <div class='sidebar-text'>
+        Uses <span class='highlight'>Advanced Machine Learning</span> to provide actionable financial intelligence.
+        <br><br>
+        <b>Key Modules:</b>
+        <ul>
+            <li>Predictive Risk Analysis</li>
+            <li>Monte Carlo Simulations</li>
+            <li>Peer Benchmarking</li>
+            <li>Anomaly Pattern Detection</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Quick Stats
+        st.markdown("---")
+        st.subheader("System Insights")
+        avg_health = users_df['financial_health_score'].mean()
+        health_status = "Good" if avg_health > 70 else "Fair" if avg_health > 50 else "Poor"
+        
+        st.markdown(f"""
+        <div class='sidebar-text'>
+        <b>Health Index:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
+        <b>Model Status:</b> <span style='color: #10b981; font-weight: bold;'>Active</span><br>
+        <b>User Base:</b> <span class='highlight'>{len(users_df):,}</span>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Export Data Button
+        st.markdown("---")
+        st.subheader("Export Center")
+        summary_data = users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score', 'risk_label']].to_csv(index=False)
+        st.download_button(
+            label="📥 Export Analysis (CSV)",
+            data=summary_data,
+            file_name="financial_health_summary.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
     
     # ============ DASHBOARD OVERVIEW ============
     if page == "📊 Dashboard Overview":
@@ -288,13 +322,17 @@ def main():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Total Users", f"{stats['total_users']:,}", delta=None)
+            st.metric("Total Users", f"{stats['total_users']:,}", 
+                      help="Total number of user profiles analyzed in the current dataset.")
         with col2:
-            st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", delta=None)
+            st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", 
+                      help="The average gross monthly income across all user segments.")
         with col3:
-            st.metric("Avg Savings", f"${stats['avg_savings']:,.0f}", delta=None)
+            st.metric("Avg Savings", f"${stats['avg_savings']:,.0f}", 
+                      help="The average amount users are saving each month after expenses.")
         with col4:
-            st.metric("Avg Health Score", f"{stats['avg_health_score']:.1f}/100", delta=None)
+            st.metric("Avg Health Score", f"{stats['avg_health_score']:.1f}/100", 
+                      help="Composite score based on savings ratio, debt-to-income, and credit history.")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -305,31 +343,37 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 with st.container(border=True):
+                    st.markdown("<p class='card-title'>📊 Risk & Health Distribution</p>", unsafe_allow_html=True)
                     st.plotly_chart(visualizer.create_risk_analysis_plot(), use_container_width=True)
             
             with col2:
                 with st.container(border=True):
+                    st.markdown("<p class='card-title'>🍕 Spending Categories</p>", unsafe_allow_html=True)
                     st.plotly_chart(visualizer.create_spending_breakdown_chart(), use_container_width=True)
             
             with st.container(border=True):
+                st.markdown("<p class='card-title'>📈 Monthly Financial Trends</p>", unsafe_allow_html=True)
                 st.plotly_chart(visualizer.create_time_series_plot(), use_container_width=True)
                 
         with tab2:
             col1, col2 = st.columns(2)
             with col1:
                 with st.container(border=True):
+                    st.markdown("<p class='card-title'>🔍 Income vs Expenses</p>", unsafe_allow_html=True)
                     st.plotly_chart(visualizer.create_income_expense_scatter(), use_container_width=True)
             
             with col2:
                 with st.container(border=True):
+                    st.markdown("<p class='card-title'>💼 Employment Analysis</p>", unsafe_allow_html=True)
                     st.plotly_chart(visualizer.create_employment_analysis(), use_container_width=True)
                     
             with st.container(border=True):
+                st.markdown("<p class='card-title'>🌡️ Feature Correlation</p>", unsafe_allow_html=True)
                 st.plotly_chart(visualizer.create_correlation_heatmap(), use_container_width=True)
                 
         with tab3:
             with st.container(border=True):
-                st.subheader("Recent Financial Snapshot")
+                st.markdown("<p class='card-title'>📋 Recent Financial Snapshot</p>", unsafe_allow_html=True)
                 st.dataframe(users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score']].head(20), use_container_width=True)
     
     # ============ USER SEGMENTATION ============
@@ -345,18 +389,19 @@ def main():
             
             with col1:
                 with st.container(border=True):
+                    st.markdown("<p class='card-title'>🎯 K-Means Cluster Profiles</p>", unsafe_allow_html=True)
                     st.plotly_chart(visualizer.create_cluster_analysis_plot(), use_container_width=True)
                 
             with col2:
                 with st.container(border=True):
-                    st.markdown("<p class='card-title'>Cluster Distribution</p>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>👥 Distribution</p>", unsafe_allow_html=True)
                     cluster_counts = users_df['cluster'].value_counts().sort_index()
                     for i, count in cluster_counts.items():
-                        st.write(f"**Cluster {i}:** {count} users")
+                        st.markdown(f"**Cluster {i}:** `{count}` users")
         
         with tab2:
             with st.container(border=True):
-                st.subheader("Cluster Profiles")
+                st.markdown("<p class='card-title'>📋 Cluster Financial Averages</p>", unsafe_allow_html=True)
                 cluster_stats = users_df.groupby('cluster').agg({
                     'monthly_income': 'mean',
                     'monthly_expenses': 'mean',
@@ -367,7 +412,7 @@ def main():
                 st.dataframe(cluster_stats, use_container_width=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
-            st.subheader("Profile Descriptions")
+            st.markdown("### Profile Descriptions")
             cols = st.columns(3)
             for i, cluster_id in enumerate(sorted(users_df['cluster'].unique())):
                 with cols[i % 3]:
@@ -377,7 +422,7 @@ def main():
                         st.markdown(f"""
                         <div class='sidebar-text'>
                         Avg Health: <span class='highlight'>{cluster_data['financial_health_score'].mean():.1f}</span><br>
-                        Avg Income: ${cluster_data['monthly_income'].mean():,.0f}<br>
+                        Avg Income: <b>${cluster_data['monthly_income'].mean():,.0f}</b><br>
                         Users: {len(cluster_data)}
                         </div>
                         """, unsafe_allow_html=True)
@@ -405,45 +450,46 @@ def main():
             col1, col2 = st.columns([1, 1])
             with col1:
                 with st.container(border=True):
-                    st.markdown("<p class='card-title'>Risk Distribution</p>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>🎯 Risk Category Distribution</p>", unsafe_allow_html=True)
                     risk_counts = users_df['risk_label'].value_counts()
-                    colors = {'Very Low': '#2ecc71', 'Low': '#27ae60', 'Medium': '#f1c40f', 
-                             'High': '#e67e22', 'Very High': '#e74c3c'}
+                    colors = {'Very Low': '#10b981', 'Low': '#34d399', 'Medium': '#f59e0b', 
+                             'High': '#f97316', 'Very High': '#ef4444'}
                     
                     fig = px.pie(
                         values=risk_counts.values, 
                         names=risk_counts.index,
                         color=risk_counts.index,
                         color_discrete_map=colors,
-                        hole=0.5
+                        hole=0.6
                     )
                     fig.update_layout(
                         template="plotly_white", 
-                        margin=dict(t=20, b=20, l=20, r=20),
-                        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+                        margin=dict(t=10, b=10, l=10, r=10),
+                        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)'
                     )
                     st.plotly_chart(fig, use_container_width=True)
                 
             with col2:
                 with st.container(border=True):
-                    st.markdown("<p class='card-title'>Risk Insights</p>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>🧠 Risk Intelligence</p>", unsafe_allow_html=True)
                     st.markdown(f"""
                     <div class='sidebar-text'>
-                    The model classifies users into 5 risk levels. Most users fall into the <span class='highlight'>Medium</span> to <span class='highlight'>Low</span> risk categories.
+                    The AI model classifies users into 5 risk levels by analyzing <b>{len(users_df.columns)}</b> financial dimensions.
                     <br><br>
-                    <b>Key drivers for risk include:</b>
+                    <b>Top Risk Factors:</b>
                     <ul>
-                        <li>Credit Score</li>
-                        <li>Monthly Savings</li>
-                        <li>Total Debt</li>
-                        <li>Income Stability</li>
+                        <li><span class='highlight'>Credit Score</span>: Impact on borrowing capacity</li>
+                        <li><span class='highlight'>Monthly Savings</span>: Buffer against volatility</li>
+                        <li><span class='highlight'>Debt-to-Income</span>: Leverage sustainability</li>
                     </ul>
                     </div>
                     """, unsafe_allow_html=True)
                 
         with tab2:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Feature Importance</p>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>📊 Model Feature Importance</p>", unsafe_allow_html=True)
                 X_class, y_class, le = prepare_classification_data(users_processed)
                 
                 from sklearn.ensemble import RandomForestClassifier
@@ -466,7 +512,9 @@ def main():
                 fig.update_layout(
                     template="plotly_white", 
                     margin=dict(t=20, b=20, l=20, r=20),
-                    height=500
+                    height=500,
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
                 )
                 st.plotly_chart(fig, use_container_width=True)
     
@@ -492,7 +540,7 @@ def main():
         
         with tab1:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Monthly Savings Trends</p>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>📈 Monthly Savings Trends & Projection</p>", unsafe_allow_html=True)
                 
                 monthly_avg = monthly_df.groupby('month').agg({
                     'income': 'mean',
@@ -507,7 +555,8 @@ def main():
                     y=monthly_avg['savings'],
                     mode='lines+markers',
                     name='Actual Savings',
-                    line=dict(color='#3b82f6', width=3, shape='spline')
+                    line=dict(color='#3b82f6', width=4, shape='spline'),
+                    marker=dict(size=10, borderwidth=2, color='white', line=dict(color='#3b82f6'))
                 ))
                 
                 # Add trend line
@@ -519,24 +568,27 @@ def main():
                     x=x_trend,
                     y=p(x_trend),
                     mode='lines',
-                    name='Forecast Trend',
-                    line=dict(color='#ef4444', dash='dash', width=2)
+                    name='AI Forecast Trend',
+                    line=dict(color='#f43f5e', dash='dash', width=2)
                 ))
                 
                 fig.update_layout(
                     template="plotly_white",
-                    xaxis_title='Month',
-                    yaxis_title='Savings ($)',
-                    xaxis=dict(tickmode='linear', tick0=1, dtick=1),
-                    margin=dict(t=20, b=20, l=20, r=20),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                    xaxis_title='Month of Year',
+                    yaxis_title='Average Savings ($)',
+                    xaxis=dict(tickmode='linear', tick0=1, dtick=1, gridcolor='#f1f5f9'),
+                    yaxis=dict(gridcolor='#f1f5f9'),
+                    margin=dict(t=30, b=30, l=30, r=30),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
                 )
                 
                 st.plotly_chart(fig, use_container_width=True)
             
         with tab2:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Savings Patterns by Risk Category</p>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>📊 Savings Performance by Risk Profile</p>", unsafe_allow_html=True)
                 
                 savings_by_risk = monthly_df.groupby('risk_label')['savings'].mean().sort_values()
                 
@@ -547,7 +599,12 @@ def main():
                     color=savings_by_risk.values,
                     color_continuous_scale='RdYlGn'
                 )
-                fig.update_layout(template="plotly_white", margin=dict(t=20, b=20, l=20, r=20))
+                fig.update_layout(
+                    template="plotly_white", 
+                    margin=dict(t=30, b=30, l=30, r=30),
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
+                )
                 st.plotly_chart(fig, use_container_width=True)
     
     # ============ ANOMALY DETECTION ============
@@ -573,11 +630,12 @@ def main():
         
         with tab1:
             with st.container(border=True):
+                st.markdown("<p class='card-title'>🚨 Spending & Savings Anomalies</p>", unsafe_allow_html=True)
                 st.plotly_chart(visualizer.create_anomaly_analysis_plot(), use_container_width=True)
             
         with tab2:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Sample of Flagged Transactions</p>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>🔍 Flagged Transactions (AI Insights)</p>", unsafe_allow_html=True)
                 
                 anomalies = monthly_df[monthly_df['ml_anomaly'] == 1]
                 st.dataframe(
@@ -587,20 +645,21 @@ def main():
     
     # ============ RECOMMENDATIONS ============
     elif page == "💡 Recommendations":
-        st.header("Personalized Financial Recommendations")
+        st.header("Financial Recommendations")
         
-        st.info("AI-powered recommendations tailored to your financial profile based on ML analysis.")
+        st.info("AI-powered recommendations tailored to your financial profile based on behavioral ML analysis.")
         
         # Recommendation type selector
         rec_type = st.radio(
-            "Select Recommendation Type",
-            ["👤 Individual User", "👥 Cohort Analysis"]
+            "Select Analysis Level:",
+            ["👤 Individual User", "👥 Cohort Analysis"],
+            horizontal=True
         )
         
         if rec_type == "👤 Individual User":
             # User selector
             user_id = st.selectbox(
-                "Select a User",
+                "Select a User Profile",
                 users_df['user_id'].unique(),
                 format_func=lambda x: f"User {x}"
             )
@@ -629,7 +688,7 @@ def main():
             
             with tab1:
                 with st.container(border=True):
-                    st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>📝 Budget Recommendations</p>", unsafe_allow_html=True)
                     for rec in user_recs['budget']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
                         st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -638,7 +697,7 @@ def main():
             
             with tab2:
                 with st.container(border=True):
-                    st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>💳 Debt Management</p>", unsafe_allow_html=True)
                     for rec in user_recs['debt']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
                         st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -647,7 +706,7 @@ def main():
             
             with tab3:
                 with st.container(border=True):
-                    st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>🏦 Savings & Safety Net</p>", unsafe_allow_html=True)
                     for rec in user_recs['savings']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
                         st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -656,7 +715,7 @@ def main():
             
             with tab4:
                 with st.container(border=True):
-                    st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
+                    st.markdown("<p class='card-title'>📈 Investment Strategy</p>", unsafe_allow_html=True)
                     for rec in user_recs['investments']:
                         status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
                         st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -669,7 +728,7 @@ def main():
             
             with col1:
                 cluster_filter = st.selectbox(
-                    "Filter by Cluster",
+                    "Filter by Cluster Profile",
                     ['All'] + list(range(5))
                 )
             with col2:
@@ -698,7 +757,7 @@ def main():
                     st.metric("Avg Health Score", f"{stats['avg_health_score']:.1f}/100")
                 
                 st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown(f"*{cohort_recs['summary']}*")
+                st.info(f"✨ **Cohort Summary:** {cohort_recs['summary']}")
                 
                 # Display cohort recommendations
                 tab1, tab2, tab3, tab4 = st.tabs(["💰 Budget", "💳 Debt", "🏦 Savings", "📈 Investments"])
@@ -707,7 +766,7 @@ def main():
                 
                 with tab1:
                     with st.container(border=True):
-                        st.markdown("<p class='card-title'>Budget Recommendations</p>", unsafe_allow_html=True)
+                        st.markdown("<p class='card-title'>📝 Budget Recommendations</p>", unsafe_allow_html=True)
                         for rec in all_recs['budget']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠'}.get(rec['status'], '⚪')
                             st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -716,7 +775,7 @@ def main():
                 
                 with tab2:
                     with st.container(border=True):
-                        st.markdown("<p class='card-title'>Debt Management Recommendations</p>", unsafe_allow_html=True)
+                        st.markdown("<p class='card-title'>💳 Debt Management</p>", unsafe_allow_html=True)
                         for rec in all_recs['debt']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'excellent': '💚', 'info': '🔵'}.get(rec['status'], '⚪')
                             st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -725,7 +784,7 @@ def main():
                 
                 with tab3:
                     with st.container(border=True):
-                        st.markdown("<p class='card-title'>Savings & Emergency Fund Recommendations</p>", unsafe_allow_html=True)
+                        st.markdown("<p class='card-title'>🏦 Savings & Safety Net</p>", unsafe_allow_html=True)
                         for rec in all_recs['savings']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
                             st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -734,7 +793,7 @@ def main():
                 
                 with tab4:
                     with st.container(border=True):
-                        st.markdown("<p class='card-title'>Investment Recommendations</p>", unsafe_allow_html=True)
+                        st.markdown("<p class='card-title'>📈 Investment Strategy</p>", unsafe_allow_html=True)
                         for rec in all_recs['investments']:
                             status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
                             st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
@@ -760,7 +819,7 @@ def main():
         
         # Goal inputs
         with st.container(border=True):
-            st.markdown("<p class='card-title'>Define Your Goal</p>", unsafe_allow_html=True)
+            st.markdown("<p class='card-title'>🎯 Define Your Financial Goal</p>", unsafe_allow_html=True)
             col1, col2 = st.columns(2)
             
             with col1:
@@ -769,7 +828,7 @@ def main():
             
             with col2:
                 current_savings_rate = user_row['monthly_savings']
-                extra_monthly = st.slider("Additional Monthly Savings ($)", 0, 2000, 0)
+                extra_monthly = st.slider("Additional Monthly Savings ($)", 0, 5000, 0)
                 total_monthly_savings = current_savings_rate + extra_monthly
 
         # Calculation
@@ -793,32 +852,42 @@ def main():
                 boost_savings = total_monthly_savings * 1.2
                 boost_months = target_amount / boost_savings
                 time_saved = months_to_reach - boost_months
-                st.metric("Time Saved with 20% Boost", f"{int(time_saved)} months", delta="Optimized", delta_color="normal")
+                st.metric("Time Saved (20% Boost)", f"{int(time_saved)} mo", delta="Optimized", delta_color="normal")
 
             # Visual Roadmap
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Achievement Timeline</p>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>📅 Achievement Timeline</p>", unsafe_allow_html=True)
                 
-                timeline_months = list(range(1, int(min(months_to_reach + 6, 60)) + 1))
+                timeline_months = list(range(1, int(min(months_to_reach + 12, 120)) + 1))
                 savings_over_time = [total_monthly_savings * m for m in timeline_months]
                 
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=timeline_months, y=savings_over_time, fill='tozeroy', name='Savings Growth', line=dict(color='#3b82f6')))
-                fig.add_hline(y=target_amount, line_dash="dash", line_color="#ef4444", annotation_text="Goal Target")
+                fig.add_trace(go.Scatter(
+                    x=timeline_months, 
+                    y=savings_over_time, 
+                    fill='tozeroy', 
+                    name='Savings Growth', 
+                    line=dict(color='#3b82f6', width=3),
+                    fillcolor='rgba(59, 130, 246, 0.1)'
+                ))
+                fig.add_hline(y=target_amount, line_dash="dash", line_color="#ef4444", 
+                             annotation_text=f"Goal: ${target_amount:,.0f}", annotation_position="top left")
                 
                 fig.update_layout(
                     template="plotly_white",
                     xaxis_title="Months from Now",
                     yaxis_title="Total Savings ($)",
-                    margin=dict(t=20, b=20, l=20, r=20)
+                    margin=dict(t=30, b=30, l=30, r=30),
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
                 )
                 st.plotly_chart(fig, use_container_width=True)
             
             # Actionable Roadmap
-            st.success(f"### Success Roadmap for your {goal_type}")
+            st.success(f"### 🏆 Success Roadmap for your {goal_type}")
             st.write(f"Based on your current savings rate of **${total_monthly_savings:,.0f}/month**, you will reach your **${target_amount:,.0f}** goal in **{years} years and {months} months**.")
             
-            st.info(f"**💡 Pro Tip:** If you reduce your discretionary spending (Entertainment/Shopping) by just 15%, you could reach your goal **{int(months_to_reach * 0.15)} months earlier**.")
+            st.info(f"💡 **Pro Tip:** If you reduce your discretionary spending by just 15%, you could reach your goal **{int(months_to_reach * 0.15)} months earlier**.")
         else:
             st.error("Please ensure your monthly savings is greater than 0 to reach your goal.")
 
@@ -838,33 +907,29 @@ def main():
         
         # Simulation Parameters
         with st.container(border=True):
-            st.markdown("<p class='card-title'>Simulation Settings</p>", unsafe_allow_html=True)
+            st.markdown("<p class='card-title'>⚙️ Simulation Settings</p>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                projection_years = st.slider("Projection Horizon (Years)", 5, 40, 25)
-                initial_wealth = st.number_input("Current Assets ($)", 0, 1000000, int(user_row['monthly_savings'] * 12))
+                projection_years = st.slider("Projection Horizon (Years)", 5, 50, 30)
+                initial_wealth = st.number_input("Current Assets ($)", 0, 5000000, int(user_row['monthly_savings'] * 24))
             
             with col2:
-                avg_return = st.slider("Expected Annual Return (%)", 1.0, 15.0, 7.0) / 100
-                volatility = st.slider("Market Volatility (%)", 5.0, 30.0, 15.0) / 100
+                avg_return = st.slider("Expected Annual Return (%)", 1.0, 15.0, 8.0) / 100
+                volatility = st.slider("Market Volatility (%)", 5.0, 40.0, 18.0) / 100
                 
             with col3:
-                monthly_contribution = st.number_input("Monthly Contribution ($)", 0, 20000, int(user_row['monthly_savings']))
+                monthly_contribution = st.number_input("Monthly Contribution ($)", 0, 50000, int(user_row['monthly_savings']))
                 num_simulations = st.selectbox("Number of Simulations", [100, 500, 1000], index=1)
 
         # Monte Carlo Simulation Logic
-        # Result matrix: [simulations, years + 1]
         results_mc = np.zeros((num_simulations, projection_years + 1))
         results_mc[:, 0] = initial_wealth
         
         for i in range(num_simulations):
             current_wealth = initial_wealth
             for year in range(1, projection_years + 1):
-                # Annualized return with volatility
                 yearly_return = np.random.normal(avg_return, volatility)
-                
-                # Add monthly contributions (simplified as yearly)
                 current_wealth = (current_wealth + monthly_contribution * 12) * (1 + yearly_return)
                 results_mc[i, year] = max(0, current_wealth)
         
@@ -876,7 +941,7 @@ def main():
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Median Wealth (25y)", f"${median_final:,.0f}")
+            st.metric(f"Median Wealth ({projection_years}y)", f"${median_final:,.0f}")
         with col2:
             st.metric("Pessimistic (10%)", f"${p10_final:,.0f}")
         with col3:
@@ -884,22 +949,22 @@ def main():
             
         # Chart
         with st.container(border=True):
+            st.markdown("<p class='card-title'>📈 Probabilistic Wealth Growth</p>", unsafe_allow_html=True)
             st.plotly_chart(visualizer.create_wealth_projection_chart(results_mc, projection_years), use_container_width=True)
             
         # Insights
         with st.container(border=True):
-            st.markdown("<p class='card-title'>Retirement Readiness</p>", unsafe_allow_html=True)
+            st.markdown("<p class='card-title'>🏖️ Retirement Readiness</p>", unsafe_allow_html=True)
             
-            # Simplified 4% rule check
             annual_withdrawal = median_final * 0.04
             monthly_income_potential = annual_withdrawal / 12
             
             st.write(f"Based on the median projection, your wealth could generate approximately **${monthly_income_potential:,.0f}/month** in retirement (using the 4% rule).")
             
             if monthly_income_potential < user_row['monthly_expenses']:
-                st.warning(f"Your projected retirement income is less than your current expenses (${user_row['monthly_expenses']:,.0f}). Consider increasing your monthly contributions.")
+                st.warning(f"⚠️ **Caution:** Your projected retirement income is less than your current expenses (${user_row['monthly_expenses']:,.0f}). Consider increasing your monthly contributions.")
             else:
-                st.success(f"Your projected retirement income exceeds your current expenses! You are on a strong path to financial independence.")
+                st.success(f"✅ **Great Job!** Your projected retirement income exceeds your current expenses. You are on a solid path to financial independence.")
 
     # ============ PEER BENCHMARKING ============
     elif page == "👥 Peer Benchmarking":
@@ -918,7 +983,6 @@ def main():
         user_data = users_df.iloc[user_idx]
         
         # Find similar users using KNN
-        # Prepare data for KNN (must match clustering features)
         from preprocessing import prepare_clustering_data
         clustering_data = prepare_clustering_data(users_df)
         
@@ -935,17 +999,17 @@ def main():
         
         with col1:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Peer Comparison Radar</p>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>🕸️ Peer Comparison Radar</p>", unsafe_allow_html=True)
                 st.plotly_chart(visualizer.create_peer_comparison_radar(user_data, peers_avg), use_container_width=True)
         
         with col2:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Benchmarking Insights</p>", unsafe_allow_html=True)
+                st.markdown("<p class='card-title'>📊 Benchmarking Insights</p>", unsafe_allow_html=True)
                 
                 # Comparison items
                 comp_items = [
-                    ('Income', 'monthly_income', '$'),
-                    ('Savings', 'monthly_savings', '$'),
+                    ('Monthly Income', 'monthly_income', '$'),
+                    ('Monthly Savings', 'monthly_savings', '$'),
                     ('Health Score', 'financial_health_score', ''),
                     ('Credit Score', 'credit_score', '')
                 ]
@@ -956,15 +1020,21 @@ def main():
                     diff = (u_val - p_val) / p_val * 100 if p_val != 0 else 0
                     
                     color = "#10b981" if u_val >= p_val else "#ef4444"
-                    icon = "🟢" if u_val >= p_val else "🔴"
+                    icon = "📈" if u_val >= p_val else "📉"
                     
                     st.markdown(f"""
-                    **{label}**: {unit}{u_val:,.1f} vs Peer Avg {unit}{p_val:,.1f} 
-                    <span style='color: {color}; font-weight: bold;'>({icon} {diff:+.1f}%)</span>
+                    <div style='margin-bottom: 15px;'>
+                        <div style='font-weight: 600; font-size: 0.9rem; color: #64748b;'>{label}</div>
+                        <div style='display: flex; align-items: baseline; gap: 10px;'>
+                            <span style='font-size: 1.2rem; font-weight: 700; color: #0f172a;'>{unit}{u_val:,.1f}</span>
+                            <span style='font-size: 0.85rem; color: #94a3b8;'>vs Peer Avg {unit}{p_val:,.1f}</span>
+                            <span style='color: {color}; font-weight: bold; font-size: 0.85rem;'>({icon} {diff:+.1f}%)</span>
+                        </div>
+                    </div>
                     """, unsafe_allow_html=True)
                 
                 st.markdown("---")
-                st.markdown(f"**Similar Users Found**: {len(similar_users)}")
+                st.markdown(f"**Financial Neighbors Found**: `{len(similar_users)}` users")
                 st.dataframe(similar_users[['user_id', 'age', 'employment_type', 'financial_health_score', 'risk_label']], use_container_width=True)
 
     # ============ SCENARIO SIMULATOR ============
@@ -975,7 +1045,7 @@ def main():
         
         # Simulator inputs
         with st.container(border=True):
-            st.markdown("<p class='card-title'>Simulation Parameters</p>", unsafe_allow_html=True)
+            st.markdown("<p class='card-title'>🔮 Adjust Your Financial Parameters</p>", unsafe_allow_html=True)
             
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -1001,7 +1071,6 @@ def main():
         sim_health_score = calculate_financial_health_score(sim_profile)
         
         # Prepare for ML prediction
-        # The classification model needs several features. We'll fill in averages for missing ones.
         sim_features = pd.DataFrame([{
             'age': 35,
             'monthly_income': sim_income,
@@ -1015,7 +1084,6 @@ def main():
             'employment_type_encoded': 0  # Assumption
         }])
         
-        # Feature engineering needed
         sim_features['savings_rate'] = sim_features['monthly_savings'] / sim_features['monthly_income'].replace(0, 1)
         sim_features['expense_ratio'] = sim_features['monthly_expenses'] / sim_features['monthly_income'].replace(0, 1)
         sim_features['investment_rate'] = sim_features['monthly_investments'] / sim_features['monthly_income'].replace(0, 1)
@@ -1023,12 +1091,10 @@ def main():
         sim_features['loan_to_income'] = sim_features['monthly_loan_payments'] / sim_features['monthly_income'].replace(0, 1)
         
         # Ensure correct column order for classifier
-        # Use the stored feature names from the model
         sim_features = sim_features[pipeline.classification_model.feature_names]
         
         # Predict risk
         sim_risk_idx = pipeline.classification_model.predict(sim_features)[0]
-        # Label encoder mapping
         _, _, le = prepare_classification_data(users_df)
         sim_risk_label = le.inverse_transform([sim_risk_idx])[0]
         
@@ -1038,96 +1104,74 @@ def main():
         
         with col1:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Predicted Health Score</p>", unsafe_allow_html=True)
-                st.markdown(f"<h1 style='text-align: center; color: #2563eb;'>{sim_health_score:.1f}</h1>", unsafe_allow_html=True)
-                
-                # Progress bar for health score
+                st.markdown("<p class='card-title'>🏆 Predicted Health Score</p>", unsafe_allow_html=True)
+                st.markdown(f"<h1 style='text-align: center; color: #2563eb; font-size: 3.5rem;'>{sim_health_score:.1f}</h1>", unsafe_allow_html=True)
                 st.progress(sim_health_score / 100)
-                
                 st.markdown(f"""
-                <div class='sidebar-text' style='text-align: center;'>
+                <div class='sidebar-text' style='text-align: center; margin-top: 10px;'>
                 Your simulated profile is in the <b>{sim_risk_label}</b> risk category.
                 </div>
                 """, unsafe_allow_html=True)
                 
         with col2:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Comparison to Average</p>", unsafe_allow_html=True)
-                
-                # Comparison metrics
+                st.markdown("<p class='card-title'>⚖️ Comparison to Market Avg</p>", unsafe_allow_html=True)
                 avg_income = users_df['monthly_income'].mean()
                 avg_health = users_df['financial_health_score'].mean()
-                
                 income_delta = (sim_income - avg_income) / avg_income * 100
                 health_delta = sim_health_score - avg_health
-                
                 st.metric("Income vs Market", f"${sim_income:,.0f}", f"{income_delta:+.1f}%")
                 st.metric("Health vs Market", f"{sim_health_score:.1f}", f"{health_delta:+.1f} pts")
         
-        # Actionable insights for simulator
+        # Actionable insights
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
-            st.markdown("<p class='card-title'>Simulation Insights</p>", unsafe_allow_html=True)
-            
+            st.markdown("<p class='card-title'>💡 Simulation Insights</p>", unsafe_allow_html=True)
             if sim_health_score < 50:
-                st.warning("Your simulated profile shows high financial stress. Consider reducing debt and increasing the savings rate.")
+                st.warning("🚨 **Caution:** Your simulated profile shows high financial stress. Consider reducing debt and increasing the savings rate.")
             elif sim_health_score < 75:
-                st.info("You have a solid foundation. To reach an excellent score, focus on increasing investments and maintaining a high credit score.")
+                st.info("✨ **Solid Foundation:** You have a solid foundation. To reach an excellent score, focus on increasing investments and maintaining a high credit score.")
             else:
-                st.success("Excellent! This simulated profile represents strong financial health. Keep up the disciplined savings and investment approach.")
-                
-            st.write("**Top Tip:** Try increasing your 'Monthly Savings' by just $200 in the simulator above to see how it moves your health score!")
+                st.success("🏆 **Excellent Score:** Excellent! This simulated profile represents strong financial health. Keep up the disciplined savings approach.")
+            st.write("**Pro Tip:** Try increasing your 'Monthly Savings' by just $200 in the simulator above to see how it moves your health score!")
 
     # ============ DATA EXPLORER ============
     elif page == "🔍 Data Explorer":
-        st.header("Data Explorer")
-        
+        st.header("Financial Dataset Explorer")
         st.info("Directly interact with the underlying data and view detailed distributions.")
         
         data_choice = st.selectbox("Select Dataset", ["User Profiles", "Monthly Transactions"])
         
         if data_choice == "User Profiles":
             with st.container(border=True):
-                st.markdown("<p class='card-title'>User Profiles Filter</p>", unsafe_allow_html=True)
-                
-                # Filters
+                st.markdown("<p class='card-title'>🔍 User Profiles Filter</p>", unsafe_allow_html=True)
                 col1, col2, col3 = st.columns(3)
-                
                 with col1:
-                    min_income = st.slider("Min Income", 0, 20000, 0)
+                    min_income = st.slider("Min Income ($)", 0, 20000, 0)
                 with col2:
-                    max_income = st.slider("Max Income", 0, 20000, 20000)
+                    max_income = st.slider("Max Income ($)", 0, 20000, 20000)
                 with col3:
                     risk_filter = st.multiselect("Risk Category", 
                                                 ['Very Low', 'Low', 'Medium', 'High', 'Very High'],
                                                 default=['Very Low', 'Low', 'Medium', 'High', 'Very High'])
-                
                 filtered = users_df[
                     (users_df['monthly_income'] >= min_income) &
                     (users_df['monthly_income'] <= max_income) &
                     (users_df['risk_label'].isin(risk_filter))
                 ]
-                
                 st.dataframe(filtered.head(100), use_container_width=True)
-                st.write(f"Showing {len(filtered)} of {len(users_df)} users")
-            
+                st.write(f"Showing **{len(filtered)}** of **{len(users_df)}** users.")
         else:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>Monthly Transactions Filter</p>", unsafe_allow_html=True)
-                
-                # Month selector
+                st.markdown("<p class='card-title'>📊 Monthly Transactions Filter</p>", unsafe_allow_html=True)
                 month_filter = st.selectbox("Select Month", list(range(1, 13)), format_func=lambda x: f"Month {x}")
-                
                 filtered = monthly_df[monthly_df['month'] == month_filter]
-                
                 st.dataframe(filtered.head(100), use_container_width=True)
-                st.write(f"Showing {len(filtered)} records for Month {month_filter}")
+                st.write(f"Showing **{len(filtered)}** records for Month {month_filter}")
         
-        # Statistics
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
-            st.markdown("<p class='card-title'>Statistical Summary</p>", unsafe_allow_html=True)
-            
+            st.markdown("<p class='card-title'>📈 Statistical Summary</p>", unsafe_allow_html=True)
             if data_choice == "User Profiles":
                 st.dataframe(users_df.describe(), use_container_width=True)
             else:
@@ -1136,10 +1180,10 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; color: #64748b; padding: 20px;'>
-        <p style='font-weight: 600;'>💰 AI-Powered Personal Finance Health Advisor</p>
-        <p style='font-size: 0.9rem;'>End-to-End ML Pipeline: Data Generation → Preprocessing → ML Models → Visualization → Insights</p>
-        <p style='font-size: 0.8rem; margin-top: 10px;'>Developed for comprehensive financial pattern analysis and behavioral prediction.</p>
+    <div style='text-align: center; color: #64748b; padding: 30px;'>
+        <p style='font-weight: 700; font-size: 1rem; color: #0f172a; margin-bottom: 5px;'>💰 AI-Powered Financial Health Advisor v2.0</p>
+        <p style='font-size: 0.85rem;'>Advanced ML Pipeline: Pattern Analysis • Risk Prediction • Monte Carlo Projections • Behavioral Insights</p>
+        <p style='font-size: 0.75rem; margin-top: 15px;'>Built for Professional Financial Intelligence and Actionable Strategy.</p>
     </div>
     """, unsafe_allow_html=True)
 

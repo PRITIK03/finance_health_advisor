@@ -27,6 +27,17 @@ RISK_COLORS = {
     'Very High': '#e74c3c'   # Alizarin
 }
 
+# Common layout updates for consistency
+def update_chart_layout(fig, title):
+    fig.update_layout(
+        template=MODERN_TEMPLATE,
+        title=title,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(t=50, b=20, l=20, r=20),
+        font=dict(family="Inter, sans-serif")
+    )
+
 
 class FinancialVisualizer:
     """Comprehensive visualization class for financial data."""
@@ -129,7 +140,10 @@ class FinancialVisualizer:
             template=MODERN_TEMPLATE,
             showlegend=False,
             height=450,
-            margin=dict(t=50, b=20, l=20, r=20)
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif")
         )
         
         return fig
@@ -158,7 +172,10 @@ class FinancialVisualizer:
             template=MODERN_TEMPLATE,
             title='Feature Correlation Heatmap',
             height=500,
-            margin=dict(t=50, b=20, l=20, r=20)
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif")
         )
         
         return fig
@@ -187,7 +204,10 @@ class FinancialVisualizer:
             template=MODERN_TEMPLATE,
             title='Average Spending Breakdown',
             height=450,
-            margin=dict(t=50, b=20, l=20, r=20)
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif")
         )
         
         return fig
@@ -233,7 +253,10 @@ class FinancialVisualizer:
             xaxis_title='Month',
             yaxis_title='Amount ($)',
             height=450,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif"),
             xaxis=dict(tickmode='linear', tick0=1, dtick=1),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
@@ -298,7 +321,10 @@ class FinancialVisualizer:
             height=450,
             showlegend=True,
             barmode='group',
-            margin=dict(t=50, b=20, l=20, r=20)
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif")
         )
         
         return fig
@@ -338,7 +364,10 @@ class FinancialVisualizer:
             xaxis_title='Expenses ($)',
             yaxis_title='Savings ($)',
             height=500,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif"),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
@@ -389,7 +418,10 @@ class FinancialVisualizer:
             xaxis_title='Monthly Income ($)',
             yaxis_title='Monthly Expenses ($)',
             height=500,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif"),
             showlegend=False
         )
         
@@ -420,7 +452,10 @@ class FinancialVisualizer:
             xaxis_title='Employment Type',
             yaxis_title='Value',
             height=500,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif"),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
