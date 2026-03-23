@@ -123,6 +123,47 @@ class FinancialDataPreprocessor:
         })
 
 
+def calculate_fire_metrics(user_row: pd.Series, safe_withdrawal_rate: float = 0.04) -> dict:
+    """Calculate Financial Independence, Retire Early (FIRE) metrics."""
+    
+    annual_expenses = user_row['monthly_expenses'] * 12
+    current_investments = user_row['monthly_investments'] * 12 * 2 # Assumption: 2 years of investments already saved
+    
+    # FIRE Numbers
+    fire_number = annual_expenses / safe_withdrawal_rate
+    lean_fire_number = (annual_expenses * 0.7) / safe_withdrawal_rate
+    fat_fire_number = (annual_expenses * 1.5) / safe_withdrawal_rate
+    
+    # Progress
+    progress_pct = (current_investments / fire_number) * 100 if fire_number > 0 else 0
+    
+    # Years to FIRE (Simplified compound interest formula)
+    # FV = P(1+r)^n + c((1+r)^n - 1)/r
+    # We'll use a simplified linear projection for UI speed, or a numerical approximation
+    monthly_contribution = user_row['monthly_savings'] + user_row['monthly_investments']
+    annual_contribution = monthly_contribution * 12
+    expected_return = 0.07 # 7% average market return
+    
+    years_to_fire = 0
+    temp_wealth = current_investments
+    if annual_contribution > 0:
+        while temp_wealth < fire_number and years_to_fire < 100:
+            temp_wealth = (temp_wealth + annual_contribution) * (1 + expected_return)
+            years_to_fire += 1
+    else:
+        years_to_fire = float('inf')
+
+    return {
+        'fire_number': fire_number,
+        'lean_fire_number': lean_fire_number,
+        'fat_fire_number': fat_fire_number,
+        'current_investments': current_investments,
+        'progress_pct': min(100, progress_pct),
+        'years_to_fire': years_to_fire,
+        'annual_expenses': annual_expenses
+    }
+
+
 def prepare_clustering_data(df: pd.DataFrame) -> pd.DataFrame:
     """Prepare data specifically for clustering analysis."""
     

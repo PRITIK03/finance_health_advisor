@@ -633,6 +633,57 @@ class FinancialVisualizer:
 
         return fig
 
+    def create_fire_progress_chart(self, metrics: dict) -> go.Figure:
+        """Create a chart showing progress towards FIRE goals."""
+        
+        categories = ['LeanFIRE', 'FIRE', 'FatFIRE']
+        values = [metrics['lean_fire_number'], metrics['fire_number'], metrics['fat_fire_number']]
+        current = metrics['current_investments']
+        
+        fig = go.Figure()
+        
+        # Add target bars
+        fig.add_trace(go.Bar(
+            x=categories,
+            y=values,
+            name='Target',
+            marker_color='rgba(148, 163, 184, 0.2)',
+            hovertemplate="Target: $%{y:,.0f}<extra></extra>"
+        ))
+        
+        # Add current progress bar
+        fig.add_trace(go.Bar(
+            x=['Current Portfolio'],
+            y=[current],
+            name='Current',
+            marker_color='#2563eb',
+            hovertemplate="Current: $%{y:,.0f}<extra></extra>"
+        ))
+        
+        # Add progress markers
+        for i, val in enumerate(values):
+            pct = (current / val) * 100 if val > 0 else 0
+            fig.add_annotation(
+                x=categories[i],
+                y=val,
+                text=f"{pct:.1f}%",
+                showarrow=False,
+                yshift=10,
+                font=dict(color='#2563eb', weight='bold')
+            )
+            
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            title='FIRE Goal Comparison',
+            yaxis_title='Amount ($)',
+            barmode='overlay',
+            showlegend=True,
+            margin=dict(t=50, b=20, l=20, r=20),
+            height=400
+        )
+        
+        return fig
+    
     def create_all_visualizations(self) -> dict:
         """Create all visualizations and return as dict."""
         

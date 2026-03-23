@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data_generator import generate_full_dataset, calculate_financial_health_score
-from preprocessing import FinancialDataPreprocessor, prepare_classification_data
+from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
@@ -300,7 +300,7 @@ def main():
         page = st.radio(
             "Go to section:",
             ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
         
@@ -1012,6 +1012,91 @@ def main():
                 st.warning(f"⚠️ **Caution:** Your projected retirement income is less than your current expenses (${user_row['monthly_expenses']:,.0f}). Consider increasing your monthly contributions.")
             else:
                 st.success(f"✅ **Great Job!** Your projected retirement income exceeds your current expenses. You are on a solid path to financial independence.")
+
+    # ============ FIRE TRACKER ============
+    elif page == "🔥 FIRE Tracker":
+        st.header("Financial Independence (FIRE) Tracker")
+        
+        st.info("Calculate your FIRE Number and track your journey toward financial freedom using the 4% Rule.")
+        
+        # User selector
+        selected_user_id = st.selectbox(
+            "Select User Profile",
+            users_df['user_id'].unique(),
+            format_func=lambda x: f"User {x}"
+        )
+        user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+        
+        # FIRE Settings
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>⚙️ FIRE Parameters</p>", unsafe_allow_html=True)
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                swr = st.slider("Safe Withdrawal Rate (%)", 2.0, 5.0, 4.0, 0.1) / 100
+            with col2:
+                custom_expenses = st.number_input("Target Annual Expenses ($)", 0, 500000, int(user_row['monthly_expenses'] * 12))
+            with col3:
+                current_stash = st.number_input("Current Investable Assets ($)", 0, 10000000, int(user_row['monthly_investments'] * 12 * 5))
+        
+        # Override user row for calculations
+        calc_row = user_row.copy()
+        calc_row['monthly_expenses'] = custom_expenses / 12
+        calc_row['monthly_investments'] = current_stash / 60 # Back-calculate monthly contribution for simplicity
+        
+        fire_metrics = calculate_fire_metrics(calc_row, safe_withdrawal_rate=swr)
+        # Fix the current investments to the user's input
+        fire_metrics['current_investments'] = current_stash
+        fire_metrics['progress_pct'] = min(100, (current_stash / fire_metrics['fire_number']) * 100) if fire_metrics['fire_number'] > 0 else 0
+        
+        # Main Metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("FIRE Number", f"${fire_metrics['fire_number']:,.0f}")
+        with col2:
+            st.metric("Current Progress", f"{fire_metrics['progress_pct']:.1f}%")
+        with col3:
+            years = fire_metrics['years_to_fire']
+            st.metric("Years to Freedom", f"{years if years < 100 else '∞'} years")
+            
+        # Visualization
+        tab1, tab2 = st.tabs(["📊 Progress Overview", "📈 FIRE Roadmap"])
+        
+        with tab1:
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                with st.container(border=True):
+                    st.plotly_chart(visualizer.create_gauge_chart(fire_metrics['progress_pct'], "FIRE Progress Index"), use_container_width=True)
+            with col2:
+                with st.container(border=True):
+                    st.plotly_chart(visualizer.create_fire_progress_chart(fire_metrics), use_container_width=True)
+                    
+        with tab2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>🗺️ Journey to Independence</p>", unsafe_allow_html=True)
+                
+                # Projection for roadmap
+                years_proj = min(50, int(fire_metrics['years_to_fire'] + 10))
+                monthly_contrib = user_row['monthly_savings'] + user_row['monthly_investments']
+                
+                x_vals = list(range(years_proj + 1))
+                y_vals = []
+                wealth = current_stash
+                for y in x_vals:
+                    y_vals.append(wealth)
+                    wealth = (wealth + monthly_contrib * 12) * 1.07
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=x_vals, y=y_vals, fill='tozeroy', name='Projected Stash', line_color='#2563eb'))
+                fig.add_hline(y=fire_metrics['fire_number'], line_dash="dash", line_color="#10b981", annotation_text="FIRE Target")
+                fig.add_hline(y=fire_metrics['lean_fire_number'], line_dash="dot", line_color="#f59e0b", annotation_text="LeanFIRE Target")
+                
+                fig.update_layout(
+                    template="plotly_white",
+                    xaxis_title="Years from Now",
+                    yaxis_title="Portfolio Value ($)",
+                    margin=dict(t=30, b=30, l=30, r=30)
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
     # ============ PEER BENCHMARKING ============
     elif page == "👥 Peer Benchmarking":
