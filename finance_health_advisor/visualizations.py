@@ -115,7 +115,8 @@ class FinancialVisualizer:
                 marker_colors=[RISK_COLORS.get(r, '#95a5a6') for r in risk_counts.index],
                 textinfo='percent+label',
                 hole=0.4,
-                pull=[0.05] * len(risk_counts)
+                pull=[0.05] * len(risk_counts),
+                hovertemplate="<b>%{label} Risk</b><br>Users: %{value}<br>Percentage: %{percent}<extra></extra>"
             ),
             row=1, col=1
         )
@@ -197,7 +198,8 @@ class FinancialVisualizer:
             hole=0.4,
             textinfo='label+percent',
             marker=dict(colors=CHART_COLORS),
-            pull=[0.02] * len(avg_spending)
+            pull=[0.02] * len(avg_spending),
+            hovertemplate="<b>%{label}</b><br>Avg Spend: $%{value:,.2f}<br>Percentage: %{percent}<extra></extra>"
         )])
         
         fig.update_layout(
@@ -583,6 +585,54 @@ class FinancialVisualizer:
         
         return fig
     
+    def create_gauge_chart(self, value: float, title: str, target: float = None) -> go.Figure:
+        """Create a professional gauge chart for scores."""
+        
+        # Define color based on value
+        if value >= 80:
+            color = "#10b981" # Emerald
+        elif value >= 60:
+            color = "#34d399" # Green
+        elif value >= 40:
+            color = "#f59e0b" # Amber
+        else:
+            color = "#ef4444" # Red
+
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number" + ("+delta" if target else ""),
+            value = value,
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': title, 'font': {'size': 20, 'color': '#0f172a', 'weight': 'bold'}},
+            delta = {'reference': target, 'increasing': {'color': "#10b981"}, 'decreasing': {'color': "#ef4444"}} if target else None,
+            gauge = {
+                'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "#64748b"},
+                'bar': {'color': color},
+                'bgcolor': "white",
+                'borderwidth': 2,
+                'bordercolor': "#e2e8f0",
+                'steps': [
+                    {'range': [0, 40], 'color': 'rgba(239, 68, 68, 0.1)'},
+                    {'range': [40, 70], 'color': 'rgba(245, 158, 11, 0.1)'},
+                    {'range': [70, 100], 'color': 'rgba(16, 185, 129, 0.1)'}
+                ],
+                'threshold': {
+                    'line': {'color': "#2563eb", 'width': 4},
+                    'thickness': 0.75,
+                    'value': target if target else value
+                }
+            }
+        ))
+
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font={'family': "Inter, sans-serif"},
+            margin=dict(t=50, b=20, l=30, r=30),
+            height=300
+        )
+
+        return fig
+
     def create_all_visualizations(self) -> dict:
         """Create all visualizations and return as dict."""
         

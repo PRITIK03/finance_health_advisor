@@ -221,6 +221,22 @@ def main():
         overflow: hidden !important;
         border: 1px solid #e2e8f0 !important;
     }
+
+    /* Micro-interactions */
+    .stButton>button:hover, .stDownloadButton>button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2) !important;
+    }
+
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.3s ease;
+    }
+
+    /* Tooltip styling */
+    .stTooltipIcon {
+        color: #2563eb !important;
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -259,6 +275,26 @@ def main():
         st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=80)
         st.markdown("<h2 style='margin-top: 10px; color: #0f172a;'>Menu</h2>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Theme Toggle
+        theme = st.toggle("🌙 Dark Mode", value=False)
+        
+        if theme:
+            st.markdown("""
+            <style>
+            .stApp { background-color: #0f172a !important; }
+            [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stMetric"], [data-testid="stSidebar"] {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+            .card-title, h1, h2, h3, [data-testid="stMetricValue"] { color: #f8fafc !important; }
+            .sidebar-text, [data-testid="stMetricLabel"], .stMarkdown p { color: #cbd5e1 !important; }
+            .stTabs [data-baseweb="tab"] { color: #94a3b8 !important; }
+            .stTabs [aria-selected="true"] { color: #3b82f6 !important; }
+            hr { border-color: #334155 !important; }
+            </style>
+            """, unsafe_allow_html=True)
         
         # Navigation
         page = st.radio(
@@ -313,31 +349,36 @@ def main():
     
     # ============ DASHBOARD OVERVIEW ============
     if page == "📊 Dashboard Overview":
-        st.header("Financial Overview")
+        st.header("Financial Executive Summary")
         
         # Summary Statistics
         stats = generate_summary_statistics(users_df, monthly_df)
         
-        # Metric cards
-        col1, col2, col3, col4 = st.columns(4)
+        # Metric cards with Gauge
+        col1, col2 = st.columns([1.5, 2.5])
         
         with col1:
-            st.metric("Total Users", f"{stats['total_users']:,}", 
-                      help="Total number of user profiles analyzed in the current dataset.")
+            with st.container(border=True):
+                st.plotly_chart(visualizer.create_gauge_chart(stats['avg_health_score'], "System Health Index"), use_container_width=True)
+                st.markdown(f"<div style='text-align: center; color: #64748b;'>Average score across <b>{stats['total_users']:,}</b> users</div>", unsafe_allow_html=True)
+
         with col2:
-            st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", 
-                      help="The average gross monthly income across all user segments.")
-        with col3:
-            st.metric("Avg Savings", f"${stats['avg_savings']:,.0f}", 
-                      help="The average amount users are saving each month after expenses.")
-        with col4:
-            st.metric("Avg Health Score", f"{stats['avg_health_score']:.1f}/100", 
-                      help="Composite score based on savings ratio, debt-to-income, and credit history.")
+            sub_col1, sub_col2 = st.columns(2)
+            with sub_col1:
+                st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", 
+                          help="The average gross monthly income across all user segments.")
+                st.metric("Avg Monthly Savings", f"${stats['avg_savings']:,.0f}", 
+                          help="The average amount users are saving each month after expenses.")
+            with sub_col2:
+                st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}", 
+                          help="Average FICO score of the analyzed population.")
+                st.metric("Data Sample Size", f"{stats['total_monthly_records']:,} mos", 
+                          help="Total historical transaction months processed.")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Tabs for different views
-        tab1, tab2, tab3 = st.tabs(["📊 Key Metrics", "🔍 Relationship Analysis", "📋 Summary Data"])
+        tab1, tab2, tab3 = st.tabs(["📊 Key Performance Indicators", "🔍 Behavioral Patterns", "📋 Dataset Snapshot"])
         
         with tab1:
             col1, col2 = st.columns(2)
@@ -668,15 +709,21 @@ def main():
             user_row = users_df[users_df['user_id'] == user_id].iloc[0]
             
             # Display user summary
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2 = st.columns([1.5, 2.5])
+            
             with col1:
-                st.metric("Income", f"${user_row['monthly_income']:,.0f}")
+                with st.container(border=True):
+                    st.plotly_chart(visualizer.create_gauge_chart(user_row['financial_health_score'], "Health Index"), use_container_width=True)
+                    st.markdown(f"<div style='text-align: center; font-weight: 700; color: #2563eb;'>{user_row['risk_label']} Risk</div>", unsafe_allow_html=True)
+
             with col2:
-                st.metric("Expenses", f"${user_row['monthly_expenses']:,.0f}")
-            with col3:
-                st.metric("Savings", f"${user_row['monthly_savings']:,.0f}")
-            with col4:
-                st.metric("Health Score", f"{user_row['financial_health_score']:.0f}/100")
+                sub_col1, sub_col2 = st.columns(2)
+                with sub_col1:
+                    st.metric("Monthly Income", f"${user_row['monthly_income']:,.0f}")
+                    st.metric("Monthly Savings", f"${user_row['monthly_savings']:,.0f}")
+                with sub_col2:
+                    st.metric("Credit Score", f"{user_row['credit_score']:.0f}")
+                    st.metric("Expense Ratio", f"{user_row['expense_ratio']:.1%}")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -1100,28 +1147,28 @@ def main():
         
         # Simulation Results
         st.markdown("<br>", unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([1.5, 2.5])
         
         with col1:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>🏆 Predicted Health Score</p>", unsafe_allow_html=True)
-                st.markdown(f"<h1 style='text-align: center; color: #2563eb; font-size: 3.5rem;'>{sim_health_score:.1f}</h1>", unsafe_allow_html=True)
-                st.progress(sim_health_score / 100)
-                st.markdown(f"""
-                <div class='sidebar-text' style='text-align: center; margin-top: 10px;'>
-                Your simulated profile is in the <b>{sim_risk_label}</b> risk category.
-                </div>
-                """, unsafe_allow_html=True)
+                st.plotly_chart(visualizer.create_gauge_chart(sim_health_score, "Simulated Health Index"), use_container_width=True)
+                st.markdown(f"<div style='text-align: center; font-weight: 700; color: #2563eb;'>{sim_risk_label} Risk Category</div>", unsafe_allow_html=True)
                 
         with col2:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>⚖️ Comparison to Market Avg</p>", unsafe_allow_html=True)
-                avg_income = users_df['monthly_income'].mean()
-                avg_health = users_df['financial_health_score'].mean()
-                income_delta = (sim_income - avg_income) / avg_income * 100
-                health_delta = sim_health_score - avg_health
+            sub_col1, sub_col2 = st.columns(2)
+            avg_income = users_df['monthly_income'].mean()
+            avg_health = users_df['financial_health_score'].mean()
+            income_delta = (sim_income - avg_income) / avg_income * 100
+            health_delta = sim_health_score - avg_health
+            
+            with sub_col1:
                 st.metric("Income vs Market", f"${sim_income:,.0f}", f"{income_delta:+.1f}%")
+            with sub_col2:
                 st.metric("Health vs Market", f"{sim_health_score:.1f}", f"{health_delta:+.1f} pts")
+            
+            with st.container(border=True):
+                st.markdown(f"**Savings Rate:** {sim_income > 0 and sim_savings/sim_income:.1%}")
+                st.markdown(f"**Debt/Income:** {sim_income > 0 and sim_debt/(sim_income*12):.1%}")
         
         # Actionable insights
         st.markdown("<br>", unsafe_allow_html=True)
