@@ -516,16 +516,94 @@ class FinancialVisualizer:
 
         fig.update_layout(
             polar=dict(
-                radialaxis=dict(
-                    visible=True,
-                    range=[0, 100]
-                )),
+                radialaxis=dict(visible=True, range=[0, 100]),
+                bgcolor='rgba(0,0,0,0)'
+            ),
             showlegend=True,
-            template=MODERN_TEMPLATE,
-            title='Peer Comparison Radar',
-            margin=dict(t=50, b=50, l=50, r=50)
+            title='You vs Peer Benchmark',
+            height=500,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=80, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif"),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
         )
+        
+        return fig
 
+    def create_debt_paydown_chart(self, results: dict) -> go.Figure:
+        """Create debt paydown projection chart."""
+        
+        fig = go.Figure()
+        
+        avalanche_hist = results['avalanche']['history']
+        snowball_hist = results['snowball']['history']
+        
+        max_months = max(len(avalanche_hist), len(snowball_hist))
+        months = list(range(max_months))
+        
+        fig.add_trace(go.Scatter(
+            x=months,
+            y=avalanche_hist,
+            name='Debt Avalanche',
+            line=dict(color='#3b82f6', width=3, shape='spline'),
+            hovertemplate="Month %{x}<br>Balance: $%{y:,.0f}<extra></extra>"
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=months,
+            y=snowball_hist,
+            name='Debt Snowball',
+            line=dict(color='#10b981', width=3, shape='spline', dash='dash'),
+            hovertemplate="Month %{x}<br>Balance: $%{y:,.0f}<extra></extra>"
+        ))
+        
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            title='Debt Elimination Projection',
+            xaxis_title='Months to Debt-Free',
+            yaxis_title='Remaining Balance ($)',
+            height=450,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        return fig
+
+    def create_interest_savings_chart(self, results: dict) -> go.Figure:
+        """Create chart comparing total interest paid."""
+        
+        strategies = ['Avalanche', 'Snowball']
+        interest = [results['avalanche']['total_interest'], results['snowball']['total_interest']]
+        months = [results['avalanche']['months'], results['snowball']['months']]
+        
+        fig = make_subplots(rows=1, cols=2, subplot_titles=("Total Interest Paid", "Months to Pay Off"))
+        
+        fig.add_trace(
+            go.Bar(x=strategies, y=interest, marker_color=['#3b82f6', '#10b981'], 
+                   text=[f"${v:,.0f}" for v in interest], textposition='auto'),
+            row=1, col=1
+        )
+        
+        fig.add_trace(
+            go.Bar(x=strategies, y=months, marker_color=['#3b82f6', '#10b981'],
+                   text=[f"{v} mos" for v in months], textposition='auto'),
+            row=1, col=2
+        )
+        
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            height=400,
+            showlegend=False,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif")
+        )
+        
         return fig
 
     def create_wealth_projection_chart(self, simulation_results: np.ndarray, years: int) -> go.Figure:

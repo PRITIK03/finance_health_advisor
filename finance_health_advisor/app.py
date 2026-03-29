@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data_generator import generate_full_dataset, calculate_financial_health_score
-from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics
+from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
@@ -300,7 +300,7 @@ def main():
         page = st.radio(
             "Go to section:",
             ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
-             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
         
@@ -1097,6 +1097,107 @@ def main():
                     margin=dict(t=30, b=30, l=30, r=30)
                 )
                 st.plotly_chart(fig, use_container_width=True)
+
+    # ============ DEBT OPTIMIZER ============
+    elif page == "💸 Debt Optimizer":
+        st.header("Debt Paydown Optimizer")
+        
+        st.info("Optimize your debt repayment strategy by comparing the Avalanche (interest-focused) and Snowball (balance-focused) methods.")
+        
+        # User selector
+        selected_user_id = st.selectbox(
+            "Select User Profile for Analysis",
+            users_df['user_id'].unique(),
+            format_func=lambda x: f"User {x}"
+        )
+        user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+        
+        # Debt setup
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>💳 Your Debt Portfolio</p>", unsafe_allow_html=True)
+            
+            # Default debt split for simulation based on user's total_debt
+            total_debt = user_row['total_debt']
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**Total Debt to Re-allocate:** `${total_debt:,.0f}`")
+                st.markdown(f"**Current Monthly Payment:** `${user_row['monthly_loan_payments']:,.0f}`")
+            
+            with col2:
+                extra_payment = st.slider("Additional Monthly Payment ($)", 0, 5000, 200)
+            
+            st.markdown("---")
+            st.write("Customize your debts for a more accurate simulation:")
+            
+            # Simplified debt inputs
+            debt_col1, debt_col2, debt_col3 = st.columns(3)
+            
+            # Split total debt into 3 hypothetical accounts
+            with debt_col1:
+                d1_bal = st.number_input("Debt 1 Balance ($)", 0.0, total_debt, total_debt * 0.2)
+                d1_rate = st.number_input("Debt 1 Interest (%)", 0.0, 35.0, 18.0)
+            with debt_col2:
+                d2_bal = st.number_input("Debt 2 Balance ($)", 0.0, total_debt, total_debt * 0.3)
+                d2_rate = st.number_input("Debt 2 Interest (%)", 0.0, 35.0, 12.0)
+            with debt_col3:
+                d3_bal = st.number_input("Debt 3 Balance ($)", 0.0, total_debt, total_debt * 0.5)
+                d3_rate = st.number_input("Debt 3 Interest (%)", 0.0, 35.0, 7.0)
+            
+            debts = [
+                {'name': 'Credit Card', 'balance': d1_bal, 'interest_rate': d1_rate, 'min_payment': d1_bal * 0.02},
+                {'name': 'Personal Loan', 'balance': d2_bal, 'interest_rate': d2_rate, 'min_payment': d2_bal * 0.03},
+                {'name': 'Auto/Other', 'balance': d3_bal, 'interest_rate': d3_rate, 'min_payment': d3_bal * 0.01}
+            ]
+            
+            # Validate total balance
+            current_total = sum(d['balance'] for d in debts)
+            if abs(current_total - total_debt) > 1:
+                st.warning(f"Note: Your customized total balance (${current_total:,.0f}) differs from the user profile total (${total_debt:,.0f}).")
+
+        # Run Simulation
+        debt_results = calculate_debt_paydown(debts, extra_payment)
+        
+        # Display Results
+        col1, col2, col3 = st.columns(3)
+        
+        best_strategy = "Avalanche" if debt_results['avalanche']['total_interest'] < debt_results['snowball']['total_interest'] else "Snowball"
+        interest_saved = abs(debt_results['avalanche']['total_interest'] - debt_results['snowball']['total_interest'])
+        
+        with col1:
+            st.metric("Total Interest (Avalanche)", f"${debt_results['avalanche']['total_interest']:,.0f}")
+        with col2:
+            st.metric("Total Interest (Snowball)", f"${debt_results['snowball']['total_interest']:,.0f}")
+        with col3:
+            st.metric("Optimal Strategy", best_strategy, delta=f"${interest_saved:,.0f} saved", delta_color="normal")
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        tab1, tab2 = st.tabs(["📈 Paydown Timeline", "📊 Strategy Comparison"])
+        
+        with tab1:
+            with st.container(border=True):
+                st.plotly_chart(visualizer.create_debt_paydown_chart(debt_results), use_container_width=True)
+        
+        with tab2:
+            with st.container(border=True):
+                st.plotly_chart(visualizer.create_interest_savings_chart(debt_results), use_container_width=True)
+                
+        # Insights
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>💡 Expert Insights</p>", unsafe_allow_html=True)
+            
+            if best_strategy == "Avalanche":
+                st.success(f"### 🚀 Go with the Avalanche Method")
+                st.write(f"By focusing on your highest interest rate debt first, you will save **${interest_saved:,.0f}** in interest compared to the Snowball method.")
+            else:
+                st.info(f"### ❄️ Go with the Snowball Method")
+                st.write(f"In this scenario, the Snowball method is slightly more efficient or comparable, and provides quick wins by clearing small balances first.")
+                
+            st.markdown(f"**Debt-Free Date:** You will be debt-free in approximately **{debt_results[best_strategy.lower()]['months']} months** using the {best_strategy} strategy with your extra **${extra_payment:,.0f}/month** payment.")
+            
+            if extra_payment == 0:
+                st.warning("⚠️ **Tip:** Even an extra $100 per month could drastically reduce your total interest and time to debt-free.")
 
     # ============ PEER BENCHMARKING ============
     elif page == "👥 Peer Benchmarking":

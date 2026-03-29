@@ -164,6 +164,67 @@ def calculate_fire_metrics(user_row: pd.Series, safe_withdrawal_rate: float = 0.
     }
 
 
+def calculate_debt_paydown(debts: list, extra_monthly_payment: float = 0) -> dict:
+    """
+    Simulate debt paydown using Snowball and Avalanche methods.
+    debts: list of dicts {'name': str, 'balance': float, 'interest_rate': float, 'min_payment': float}
+    """
+    
+    def simulate(debt_list, strategy='avalanche'):
+        # Sort based on strategy
+        if strategy == 'avalanche':
+            # Highest interest rate first
+            sorted_debts = sorted(debt_list, key=lambda x: x['interest_rate'], reverse=True)
+        else:
+            # Snowball: Smallest balance first
+            sorted_debts = sorted(debt_list, key=lambda x: x['balance'])
+            
+        current_debts = [d.copy() for d in sorted_debts]
+        total_balance_history = []
+        months = 0
+        total_interest_paid = 0
+        
+        while any(d['balance'] > 0 for d in current_debts) and months < 600: # 50 year cap
+            months += 1
+            available_extra = extra_monthly_payment
+            monthly_total_balance = 0
+            
+            # 1. Apply interest and minimum payments
+            for d in current_debts:
+                if d['balance'] > 0:
+                    interest = (d['balance'] * (d['interest_rate'] / 100)) / 12
+                    d['balance'] += interest
+                    total_interest_paid += interest
+                    
+                    # Pay minimum
+                    payment = min(d['balance'], d['min_payment'])
+                    d['balance'] -= payment
+                
+            # 2. Apply extra payment to the target debt
+            for d in current_debts:
+                if d['balance'] > 0 and available_extra > 0:
+                    payment = min(d['balance'], available_extra)
+                    d['balance'] -= payment
+                    available_extra -= payment
+            
+            monthly_total_balance = sum(d['balance'] for d in current_debts)
+            total_balance_history.append(monthly_total_balance)
+            
+        return {
+            'months': months,
+            'total_interest': total_interest_paid,
+            'history': total_balance_history
+        }
+
+    avalanche_res = simulate(debts, 'avalanche')
+    snowball_res = simulate(debts, 'snowball')
+    
+    return {
+        'avalanche': avalanche_res,
+        'snowball': snowball_res
+    }
+
+
 def prepare_clustering_data(df: pd.DataFrame) -> pd.DataFrame:
     """Prepare data specifically for clustering analysis."""
     
