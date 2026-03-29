@@ -664,27 +664,14 @@ class FinancialVisualizer:
         return fig
     
     def create_gauge_chart(self, value: float, title: str, target: float = None) -> go.Figure:
-        """Create a professional gauge chart for scores."""
-        
-        # Define color based on value
-        if value >= 80:
-            color = "#10b981" # Emerald
-        elif value >= 60:
-            color = "#34d399" # Green
-        elif value >= 40:
-            color = "#f59e0b" # Amber
-        else:
-            color = "#ef4444" # Red
-
         fig = go.Figure(go.Indicator(
-            mode = "gauge+number" + ("+delta" if target else ""),
+            mode = "gauge+number",
             value = value,
             domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': title, 'font': {'size': 20, 'color': '#0f172a', 'weight': 'bold'}},
-            delta = {'reference': target, 'increasing': {'color': "#10b981"}, 'decreasing': {'color': "#ef4444"}} if target else None,
+            title = {'text': title, 'font': {'size': 18, 'weight': 'bold'}},
             gauge = {
-                'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "#64748b"},
-                'bar': {'color': color},
+                'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                'bar': {'color': "#2563eb"},
                 'bgcolor': "white",
                 'borderwidth': 2,
                 'bordercolor': "#e2e8f0",
@@ -694,21 +681,98 @@ class FinancialVisualizer:
                     {'range': [70, 100], 'color': 'rgba(16, 185, 129, 0.1)'}
                 ],
                 'threshold': {
-                    'line': {'color': "#2563eb", 'width': 4},
+                    'line': {'color': "red", 'width': 4},
                     'thickness': 0.75,
-                    'value': target if target else value
+                    'value': target if target else 90
                 }
             }
         ))
-
+        
         fig.update_layout(
+            height=250,
+            margin=dict(l=20, r=20, t=50, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Inter, sans-serif")
+        )
+        return fig
+
+    def create_sparkline(self, data: list, color: str = "#2563eb", height: int = 60) -> go.Figure:
+        """Create a tiny sparkline chart for metric cards."""
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatter(
+            y=data,
+            mode='lines',
+            fill='tozeroy',
+            line=dict(color=color, width=2),
+            fillcolor=f"rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.1)",
+            hoverinfo='none'
+        ))
+        
+        fig.update_layout(
+            height=height,
+            margin=dict(l=0, r=0, t=0, b=0),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font={'family': "Inter, sans-serif"},
-            margin=dict(t=50, b=20, l=30, r=30),
-            height=300
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            showlegend=False
         )
+        return fig
 
+    def create_mini_bullet(self, value: float, target: float, title: str = "", color: str = "#2563eb") -> go.Figure:
+        """Create a small bullet chart for progress tracking."""
+        fig = go.Figure(go.Indicator(
+            mode = "number+gauge+delta",
+            value = value,
+            delta = {'reference': target, 'position': "top", 'relative': True, 'font': {'size': 12}},
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': title, 'font': {'size': 14}},
+            gauge = {
+                'shape': "bullet",
+                'axis': {'range': [None, max(value, target) * 1.2]},
+                'threshold': {
+                    'line': {'color': "black", 'width': 2},
+                    'thickness': 0.75,
+                    'value': target
+                },
+                'bar': {'color': color},
+                'steps': [
+                    {'range': [0, target * 0.5], 'color': "rgba(0,0,0,0.05)"},
+                    {'range': [target * 0.5, target], 'color': "rgba(0,0,0,0.1)"}
+                ],
+            }
+        ))
+        
+        fig.update_layout(
+            height=100,
+            margin=dict(l=20, r=20, t=40, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Inter, sans-serif")
+        )
+        return fig
+
+    def create_mini_bar(self, labels: list, values: list, title: str = "", color: str = "#3b82f6") -> go.Figure:
+        """Create a small horizontal bar chart for quick distributions."""
+        fig = go.Figure(go.Bar(
+            x=values,
+            y=labels,
+            orientation='h',
+            marker_color=color,
+            text=[f"${v:,.0f}" for v in values],
+            textposition='auto',
+        ))
+        
+        fig.update_layout(
+            height=200,
+            margin=dict(l=0, r=0, t=30, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(visible=False),
+            yaxis=dict(autorange="reversed", tickfont=dict(size=10)),
+            title=dict(text=title, font=dict(size=12)),
+            showlegend=False
+        )
         return fig
 
     def create_fire_progress_chart(self, metrics: dict) -> go.Figure:

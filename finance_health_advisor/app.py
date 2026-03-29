@@ -327,6 +327,14 @@ def main():
         avg_health = users_df['financial_health_score'].mean()
         health_status = "Good" if avg_health > 70 else "Fair" if avg_health > 50 else "Poor"
         
+        # Micro Bullet for Average Health vs Target
+        st.plotly_chart(visualizer.create_mini_bullet(avg_health, 85, "Avg Health Index", color="#10b981"), use_container_width=True)
+        
+        # Top 3 Spending Categories Mini Bar
+        spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
+        top_spending = monthly_df[spending_cols].mean().sort_values(ascending=False).head(3)
+        st.plotly_chart(visualizer.create_mini_bar(top_spending.index.tolist(), top_spending.values.tolist(), "Top 3 Avg Monthly Spend", color="#f59e0b"), use_container_width=True)
+        
         st.markdown(f"""
         <div class='sidebar-text'>
         <b>Health Index:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
@@ -364,11 +372,22 @@ def main():
 
         with col2:
             sub_col1, sub_col2 = st.columns(2)
+            
+            # Prepare sparkline data
+            monthly_income_trend = monthly_df.groupby('month')['income'].mean().tolist()
+            monthly_savings_trend = monthly_df.groupby('month')['savings'].mean().tolist()
+            
             with sub_col1:
-                st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", 
-                          help="The average gross monthly income across all user segments.")
-                st.metric("Avg Monthly Savings", f"${stats['avg_savings']:,.0f}", 
-                          help="The average amount users are saving each month after expenses.")
+                with st.container(border=False):
+                    st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", 
+                              help="The average gross monthly income across all user segments.")
+                    st.plotly_chart(visualizer.create_sparkline(monthly_income_trend, color="#10b981"), use_container_width=True)
+                
+                with st.container(border=False):
+                    st.metric("Avg Monthly Savings", f"${stats['avg_savings']:,.0f}", 
+                              help="The average amount users are saving each month after expenses.")
+                    st.plotly_chart(visualizer.create_sparkline(monthly_savings_trend, color="#3b82f6"), use_container_width=True)
+                    
             with sub_col2:
                 st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}", 
                           help="Average FICO score of the analyzed population.")
@@ -718,9 +737,23 @@ def main():
 
             with col2:
                 sub_col1, sub_col2 = st.columns(2)
+                
+                # User's personal trends for sparklines
+                user_monthly = monthly_df[monthly_df['user_id'] == user_id].sort_values('month')
+                user_income_trend = user_monthly['income'].tolist()
+                user_savings_trend = user_monthly['savings'].tolist()
+                
                 with sub_col1:
-                    st.metric("Monthly Income", f"${user_row['monthly_income']:,.0f}")
-                    st.metric("Monthly Savings", f"${user_row['monthly_savings']:,.0f}")
+                    with st.container(border=False):
+                        st.metric("Monthly Income", f"${user_row['monthly_income']:,.0f}")
+                        if user_income_trend:
+                            st.plotly_chart(visualizer.create_sparkline(user_income_trend, color="#10b981", height=40), use_container_width=True)
+                    
+                    with st.container(border=False):
+                        st.metric("Monthly Savings", f"${user_row['monthly_savings']:,.0f}")
+                        if user_savings_trend:
+                            st.plotly_chart(visualizer.create_sparkline(user_savings_trend, color="#3b82f6", height=40), use_container_width=True)
+                
                 with sub_col2:
                     st.metric("Credit Score", f"{user_row['credit_score']:.0f}")
                     st.metric("Expense Ratio", f"{user_row['expense_ratio']:.1%}")
