@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data_generator import generate_full_dataset, calculate_financial_health_score
-from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown
+from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown, calculate_emergency_fund_stress_test
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
@@ -299,7 +299,7 @@ def main():
         # Navigation
         page = st.radio(
             "Go to section:",
-            ["📊 Dashboard Overview", "👥 User Segmentation", "🎯 Risk Prediction", 
+            ["📊 Dashboard Overview", "🚨 Stress Test", "👥 User Segmentation", "🎯 Risk Prediction", 
              "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
@@ -436,6 +436,71 @@ def main():
                 st.markdown("<p class='card-title'>📋 Recent Financial Snapshot</p>", unsafe_allow_html=True)
                 st.dataframe(users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score']].head(20), use_container_width=True)
     
+    # ============ STRESS TEST ============
+    elif page == "🚨 Stress Test":
+        st.header("Emergency Fund Stress Test")
+        
+        st.info("Simulate how your finances would handle common life crises and see how long your emergency fund would last.")
+        
+        # User selector
+        selected_user_id = st.selectbox(
+            "Select User Profile for Stress Test",
+            users_df['user_id'].unique(),
+            format_func=lambda x: f"User {x}"
+        )
+        user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+        
+        # Crisis selector
+        crisis_type = st.radio(
+            "Select Crisis Scenario:",
+            ["Job Loss", "Medical Emergency", "Major Repair"],
+            horizontal=True
+        )
+        
+        # Run stress test
+        stress_results = calculate_emergency_fund_stress_test(user_row, crisis_type)
+        
+        # Metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Emergency Fund (Estimated)", f"${stress_results['initial_fund']:,.0f}")
+        with col2:
+            st.metric("Survival Buffer", f"{stress_results['months_buffer']:.1f} months")
+        with col3:
+            st.metric("Survival Status", "Safe ✅" if stress_results['is_safe'] else "At Risk ⚠️", 
+                      delta=f"{stress_results['months_buffer'] - 6:.1f} mo vs benchmark", delta_color="normal")
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col1, col2 = st.columns([1.5, 2.5])
+        
+        with col1:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>🚨 Crisis Impact</p>", unsafe_allow_html=True)
+                st.write(f"**Crisis:** {crisis_type}")
+                st.info(stress_results['impact_message'])
+                st.write(f"**Monthly Crisis Expenses:** `${stress_results['crisis_expenses']:,.0f}`")
+                st.write(f"**Starting Fund for Crisis:** `${stress_results['remaining_fund_start']:,.0f}`")
+        
+        with col2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>📅 Survival Timeline</p>", unsafe_allow_html=True)
+                
+                # Plot survival
+                months = list(range(1, int(stress_results['months_buffer']) + 2))
+                remaining_fund = [max(0, stress_results['remaining_fund_start'] - stress_results['crisis_expenses'] * m) for m in months]
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=months, y=remaining_fund, fill='tozeroy', name='Emergency Fund', line_color='#ef4444'))
+                fig.add_hline(y=0, line_color='black')
+                fig.update_layout(
+                    template="plotly_white",
+                    xaxis_title="Months Into Crisis",
+                    yaxis_title="Remaining Fund ($)",
+                    margin=dict(t=30, b=30, l=30, r=30)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
     # ============ USER SEGMENTATION ============
     elif page == "👥 User Segmentation":
         st.header("User Segmentation Analysis")
@@ -796,11 +861,18 @@ def main():
             with tab4:
                 with st.container(border=True):
                     st.markdown("<p class='card-title'>📈 Investment Strategy</p>", unsafe_allow_html=True)
-                    for rec in user_recs['investments']:
-                        status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
-                        st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
-                        st.markdown(f"   *💡 {rec['suggestion']}*")
-                        st.markdown("")
+                    
+                    # Diversification Radar (New Feature)
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        st.plotly_chart(visualizer.create_diversification_radar(user_row), use_container_width=True)
+                    with col2:
+                        st.markdown("**Investment Performance Insights:**")
+                        for rec in user_recs['investments']:
+                            status_color = {'good': '🟢', 'warning': '🟡', 'critical': '🔴', 'moderate': '🟠', 'info': '🔵'}.get(rec['status'], '⚪')
+                            st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
+                            st.markdown(f"   *💡 {rec['suggestion']}*")
+                            st.markdown("")
         
         else:
             # Cohort Analysis

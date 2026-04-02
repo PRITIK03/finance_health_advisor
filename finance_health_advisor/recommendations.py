@@ -335,6 +335,16 @@ class RecommendationsEngine:
             'message': 'Tax-Advantaged Account Recommendations',
             'suggestion': 'Maximize 401(k) contributions (especially employer match), Roth IRA, and HSAs before taxable accounts.'
         })
+
+        # Tax Optimization (New Feature)
+        annual_income = income * 12
+        if annual_income > 50000:
+            recommendations.append({
+                'category': 'Tax Strategy',
+                'status': 'info',
+                'message': f'With an annual income of ${annual_income:,.0f}, you are in a higher tax bracket.',
+                'suggestion': 'Maximize your 401(k) and HSA contributions to reduce your taxable income.'
+            })
         
         return recommendations
     

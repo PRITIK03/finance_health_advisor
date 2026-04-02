@@ -775,6 +775,42 @@ class FinancialVisualizer:
         )
         return fig
 
+    def create_diversification_radar(self, user_row: pd.Series) -> go.Figure:
+        """Create a radar chart for investment diversification."""
+        # Synthesize diversification data from user profile
+        # In a real app, this would come from a detailed portfolio
+        categories = ['Stocks', 'Bonds', 'Real Estate', 'Cash', 'Crypto', 'Commodities']
+        
+        # Heuristic based on risk label and income
+        if user_row['risk_label'] == 'Very Low':
+            values = [30, 40, 10, 15, 0, 5]
+        elif user_row['risk_label'] == 'Low':
+            values = [50, 20, 15, 10, 2, 3]
+        elif user_row['risk_label'] == 'Medium':
+            values = [60, 10, 10, 10, 5, 5]
+        else:
+            values = [70, 5, 5, 5, 10, 5]
+            
+        fig = go.Figure(data=go.Scatterpolar(
+            r=values,
+            theta=categories,
+            fill='toself',
+            marker=dict(color='#2563eb'),
+            name='Current Allocation'
+        ))
+        
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(visible=True, range=[0, 100]),
+                bgcolor='rgba(0,0,0,0)'
+            ),
+            showlegend=False,
+            height=350,
+            title="Portfolio Diversification",
+            margin=dict(t=50, b=20, l=30, r=30)
+        )
+        return fig
+
     def create_fire_progress_chart(self, metrics: dict) -> go.Figure:
         """Create a chart showing progress towards FIRE goals."""
         
@@ -788,42 +824,76 @@ class FinancialVisualizer:
         fig.add_trace(go.Bar(
             x=categories,
             y=values,
-            name='Target',
-            marker_color='rgba(148, 163, 184, 0.2)',
-            hovertemplate="Target: $%{y:,.0f}<extra></extra>"
+            name='Target Amount',
+            marker_color='rgba(37, 99, 235, 0.1)',
+            marker_line=dict(color='#2563eb', width=2),
+            hovertemplate="<b>%{x}</b><br>Target: $%{y:,.0f}<extra></extra>"
         ))
         
-        # Add current progress bar
-        fig.add_trace(go.Bar(
-            x=['Current Portfolio'],
-            y=[current],
-            name='Current',
-            marker_color='#2563eb',
-            hovertemplate="Current: $%{y:,.0f}<extra></extra>"
-        ))
+        # Add current progress line
+        fig.add_hline(
+            y=current,
+            line_dash="dash",
+            line_color="#10b981",
+            line_width=3,
+            annotation_text=f"Current: ${current:,.0f}",
+            annotation_position="top right"
+        )
         
-        # Add progress markers
-        for i, val in enumerate(values):
-            pct = (current / val) * 100 if val > 0 else 0
-            fig.add_annotation(
-                x=categories[i],
-                y=val,
-                text=f"{pct:.1f}%",
-                showarrow=False,
-                yshift=10,
-                font=dict(color='#2563eb', weight='bold')
-            )
-            
         fig.update_layout(
             template=MODERN_TEMPLATE,
             title='FIRE Goal Comparison',
             yaxis_title='Amount ($)',
-            barmode='overlay',
-            showlegend=True,
-            margin=dict(t=50, b=20, l=20, r=20),
-            height=400
+            height=350,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=30, r=30),
+            showlegend=False
         )
         
+        return fig
+
+    def create_subscription_audit_chart(self, monthly_df: pd.DataFrame, user_id: int) -> go.Figure:
+        """Analyze subscriptions and suggest audit."""
+        user_monthly = monthly_df[monthly_df['user_id'] == user_id]
+        avg_sub = user_monthly['Subscriptions'].mean()
+        
+        # Mocking individual subscriptions for audit simulation
+        subs = [
+            {'name': 'Netflix', 'cost': 19.99, 'usage': 'High'},
+            {'name': 'Spotify', 'cost': 10.99, 'usage': 'Medium'},
+            {'name': 'Gym', 'cost': 45.00, 'usage': 'Low'},
+            {'name': 'Cloud Storage', 'cost': 9.99, 'usage': 'High'},
+            {'name': 'News', 'cost': 15.00, 'usage': 'Low'}
+        ]
+        
+        # Filter to match user's average subscription spending roughly
+        total = 0
+        final_subs = []
+        for s in subs:
+            if total + s['cost'] <= avg_sub * 1.5:
+                final_subs.append(s)
+                total += s['cost']
+        
+        df_subs = pd.DataFrame(final_subs)
+        
+        fig = px.bar(
+            df_subs, 
+            x='name', 
+            y='cost', 
+            color='usage',
+            color_discrete_map={'High': '#10b981', 'Medium': '#f59e0b', 'Low': '#ef4444'},
+            title='Subscription Cost Audit',
+            labels={'usage': 'Usage Level', 'cost': 'Monthly Cost ($)', 'name': 'Service'}
+        )
+        
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            height=350,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=30, r=30)
+        )
         return fig
     
     def create_all_visualizations(self) -> dict:

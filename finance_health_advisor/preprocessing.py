@@ -123,7 +123,7 @@ class FinancialDataPreprocessor:
         })
 
 
-def calculate_fire_metrics(user_row: pd.Series, safe_withdrawal_rate: float = 0.04) -> dict:
+def calculate_fire_metrics(user_row: pd.Series, safe_withdrawal_rate: float = 0.04, inflation_rate: float = 0.03) -> dict:
     """Calculate Financial Independence, Retire Early (FIRE) metrics."""
     
     annual_expenses = user_row['monthly_expenses'] * 12
@@ -137,18 +137,18 @@ def calculate_fire_metrics(user_row: pd.Series, safe_withdrawal_rate: float = 0.
     # Progress
     progress_pct = (current_investments / fire_number) * 100 if fire_number > 0 else 0
     
-    # Years to FIRE (Simplified compound interest formula)
-    # FV = P(1+r)^n + c((1+r)^n - 1)/r
-    # We'll use a simplified linear projection for UI speed, or a numerical approximation
+    # Real expected return (Nominal - Inflation)
+    expected_return = 0.07 # 7% average market return
+    real_return = expected_return - inflation_rate
+    
     monthly_contribution = user_row['monthly_savings'] + user_row['monthly_investments']
     annual_contribution = monthly_contribution * 12
-    expected_return = 0.07 # 7% average market return
     
     years_to_fire = 0
     temp_wealth = current_investments
     if annual_contribution > 0:
         while temp_wealth < fire_number and years_to_fire < 100:
-            temp_wealth = (temp_wealth + annual_contribution) * (1 + expected_return)
+            temp_wealth = (temp_wealth + annual_contribution) * (1 + real_return)
             years_to_fire += 1
     else:
         years_to_fire = float('inf')
@@ -161,6 +161,41 @@ def calculate_fire_metrics(user_row: pd.Series, safe_withdrawal_rate: float = 0.
         'progress_pct': min(100, progress_pct),
         'years_to_fire': years_to_fire,
         'annual_expenses': annual_expenses
+    }
+
+
+def calculate_emergency_fund_stress_test(user_row: pd.Series, crisis_type: str = "Job Loss") -> dict:
+    """
+    Simulate how many months the current emergency fund lasts under different crises.
+    crisis_type: 'Job Loss', 'Medical Emergency', 'Major Repair'
+    """
+    current_savings = user_row['monthly_savings'] * 6 # Assumption: 6 months of savings is the fund
+    monthly_expenses = user_row['monthly_expenses']
+    
+    # Adjust expenses based on crisis
+    if crisis_type == "Job Loss":
+        # Cut discretionary spending (30% reduction)
+        crisis_expenses = monthly_expenses * 0.7
+        impact_message = "Reduced discretionary spending by 30%."
+    elif crisis_type == "Medical Emergency":
+        # Immediate one-time cost + slightly higher monthly
+        current_savings -= 5000 # One-time $5k medical bill
+        crisis_expenses = monthly_expenses * 1.1 # 10% more for follow-ups
+        impact_message = "Paid $5,000 upfront + 10% monthly increase."
+    else: # Major Repair
+        current_savings -= 3000
+        crisis_expenses = monthly_expenses
+        impact_message = "Paid $3,000 one-time repair cost."
+        
+    months_buffer = max(0, current_savings / crisis_expenses) if crisis_expenses > 0 else 100
+    
+    return {
+        'months_buffer': months_buffer,
+        'crisis_expenses': crisis_expenses,
+        'initial_fund': user_row['monthly_savings'] * 6,
+        'remaining_fund_start': current_savings,
+        'impact_message': impact_message,
+        'is_safe': months_buffer >= 6
     }
 
 
