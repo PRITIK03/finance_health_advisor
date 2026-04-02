@@ -1460,14 +1460,14 @@ def main():
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                sim_income = st.number_input("Monthly Income ($)", 0, 50000, 5000)
-                sim_expenses = st.number_input("Monthly Expenses ($)", 0, 50000, 3500)
+                sim_income = st.slider("Monthly Income ($)", 0, 50000, 5000)
+                sim_expenses = st.slider("Monthly Expenses ($)", 0, 50000, 3500)
             with col2:
-                sim_savings = st.number_input("Monthly Savings ($)", 0, 50000, 1000)
-                sim_investments = st.number_input("Monthly Investments ($)", 0, 50000, 500)
+                sim_savings = st.slider("Monthly Savings ($)", 0, 50000, 1000)
+                sim_investments = st.slider("Monthly Investments ($)", 0, 50000, 500)
             with col3:
                 sim_credit = st.slider("Credit Score", 300, 850, 700)
-                sim_debt = st.number_input("Total Debt ($)", 0, 1000000, 50000)
+                sim_debt = st.slider("Total Debt ($)", 0, 1000000, 50000)
         
         # Calculation logic
         sim_profile = {

@@ -9,22 +9,26 @@ A professional-grade financial advisory dashboard built with **Streamlit** and *
 - **Risk Prediction**: AI-powered classification of financial vulnerability (Random Forest).
 - **Behavioral Analysis**: K-Means clustering to identify distinct financial profiles.
 - **Micro-Charts**: High-density sparklines and mini-bullet charts for instant visual context.
+- **💸 Subscription Audit**: Identify recurring cost leaks with usage-based AI analysis.
+- **🏆 Gamification**: Achievement badges like "Debt-Free Dynamo" and "FIRE Starter".
 
 ### 💸 Strategic Planning Tools
-- **🔥 FIRE Tracker**: Calculate your Financial Independence number and roadmap using the 4% Rule.
-- **💸 Debt Optimizer**: Compare **Avalanche** (interest-focused) vs. **Snowball** (balance-focused) strategies to eliminate debt.
-- **🎯 Goal Planner**: Interactive roadmap for major milestones like homes, cars, or emergency funds.
-- **🚀 Wealth Projection**: Monte Carlo simulations to project long-term portfolio growth under market volatility.
+- **🔥 FIRE Tracker**: Now with **Inflation-Adjusted** roadmaps and safe withdrawal simulations.
+- **🚨 Emergency Fund Stress Test**: Simulate "Job Loss" or "Medical Crisis" to test your survival buffer.
+- **💸 Debt Optimizer**: Compare **Avalanche** vs. **Snowball** strategies.
+- **🎯 Goal Planner**: Interactive roadmap for major milestones.
+- **🚀 Wealth Projection**: Monte Carlo simulations with **Real Return (Inflation-Adjusted)** logic.
 
 ### 🔍 Advanced Analytics
-- **🔮 Scenario Simulator**: "What-If" analysis to see how changes in income or debt affect your health score.
-- **👥 Peer Benchmarking**: Compare your financial standing against similar users using K-Nearest Neighbors (KNN).
-- **🚨 Anomaly Detection**: Isolation Forest algorithm to flag unusual spending or savings patterns.
-- **💡 Recommendations**: Personalized budget, debt, and investment advice based on behavioral ML insights.
+- **🔮 Interactive Simulator**: Real-time "What-If" budget sliding to see instant health score impacts.
+- **👥 Comparison Mode**: Side-by-side user profiling and comparative radar analysis.
+- **👥 Peer Benchmarking**: Compare against similar neighbors (KNN).
+- **🚨 Anomaly Detection**: Flag unusual spending patterns.
+- **💡 Recommendations**: Personalized advice including **Tax Optimization** strategies.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: [Streamlit](https://streamlit.io/) with custom CSS injection for modern UI/UX.
+- **Frontend**: [Streamlit](https://streamlit.io/) with **Glassmorphism UI** (CSS backdrop-blur).
 - **Data Science**: [Pandas](https://pandas.pydata.org/), [NumPy](https://numpy.org/).
 - **Machine Learning**: [Scikit-learn](https://scikit-learn.org/) (Random Forest, Gradient Boosting, K-Means, KNN, Isolation Forest).
 - **Visualizations**: [Plotly](https://plotly.com/) for interactive charts and gauges.
