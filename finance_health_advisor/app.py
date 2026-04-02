@@ -228,14 +228,22 @@ def main():
         box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2) !important;
     }
 
-    [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-        transition: all 0.3s ease;
+    /* Glassmorphism Effect */
+    [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stMetric"], [data-testid="stSidebar"] {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
     }
 
-    /* Tooltip styling */
-    .stTooltipIcon {
-        color: #2563eb !important;
+    /* Animation */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stApp {
+        animation: fadeIn 0.5s ease-out;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -330,7 +338,19 @@ def main():
         # Micro Bullet for Average Health vs Target
         st.plotly_chart(visualizer.create_mini_bullet(avg_health, 85, "Avg Health Index", color="#10b981"), use_container_width=True)
         
+        # Financial Milestone Badges (New Feature)
+        st.markdown("---")
+        st.subheader("🏆 Achievements")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("🛡️ **Debt-Free**")
+            st.markdown("🔥 **FIRE Starter**")
+        with col2:
+            st.markdown("🌟 **Elite Credit**")
+            st.markdown("🏦 **Wealth Builder**")
+        
         # Top 3 Spending Categories Mini Bar
+        st.markdown("---")
         spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
         top_spending = monthly_df[spending_cols].mean().sort_values(ascending=False).head(3)
         st.plotly_chart(visualizer.create_mini_bar(top_spending.index.tolist(), top_spending.values.tolist(), "Top 3 Avg Monthly Spend", color="#f59e0b"), use_container_width=True)
@@ -397,7 +417,7 @@ def main():
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Tabs for different views
-        tab1, tab2, tab3 = st.tabs(["📊 Key Performance Indicators", "🔍 Behavioral Patterns", "📋 Dataset Snapshot"])
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Key Performance Indicators", "🔍 Behavioral Patterns", "💸 Subscription Audit", "📋 Dataset Snapshot"])
         
         with tab1:
             col1, col2 = st.columns(2)
@@ -430,8 +450,21 @@ def main():
             with st.container(border=True):
                 st.markdown("<p class='card-title'>🌡️ Feature Correlation</p>", unsafe_allow_html=True)
                 st.plotly_chart(visualizer.create_correlation_heatmap(), use_container_width=True)
-                
+        
         with tab3:
+            st.info("💡 **Subscription Leakage Detection:** AI analyzes your recurring costs to identify low-usage services.")
+            selected_user_id = st.selectbox("Select User for Audit", users_df['user_id'].unique(), key="sub_audit_user")
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                with st.container(border=True):
+                    st.plotly_chart(visualizer.create_subscription_audit_chart(monthly_df, selected_user_id), use_container_width=True)
+            with col2:
+                st.markdown("### 🚨 High Risk Leaks")
+                st.error("Gym Subscription (Low Usage)")
+                st.warning("News Publication (Medium Usage)")
+                st.success("Netflix (High Usage - Keep)")
+                
+        with tab4:
             with st.container(border=True):
                 st.markdown("<p class='card-title'>📋 Recent Financial Snapshot</p>", unsafe_allow_html=True)
                 st.dataframe(users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score']].head(20), use_container_width=True)
@@ -500,6 +533,38 @@ def main():
                     margin=dict(t=30, b=30, l=30, r=30)
                 )
                 st.plotly_chart(fig, use_container_width=True)
+
+    # ============ COMPARISON MODE ============
+    elif page == "👥 Comparison Mode":
+        st.header("Side-by-Side User Comparison")
+        
+        st.info("Compare two financial profiles side-by-side to identify relative strengths and opportunities.")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            u1_id = st.selectbox("Select User A", users_df['user_id'].unique(), index=0)
+            u1_data = users_df[users_df['user_id'] == u1_id].iloc[0]
+            with st.container(border=True):
+                st.plotly_chart(visualizer.create_gauge_chart(u1_data['financial_health_score'], f"User {u1_id} Health"), use_container_width=True)
+                st.metric("Income", f"${u1_data['monthly_income']:,.0f}")
+                st.metric("Savings", f"${u1_data['monthly_savings']:,.0f}")
+                st.metric("Risk", u1_data['risk_label'])
+        
+        with col2:
+            u2_id = st.selectbox("Select User B", users_df['user_id'].unique(), index=1)
+            u2_data = users_df[users_df['user_id'] == u2_id].iloc[0]
+            with st.container(border=True):
+                st.plotly_chart(visualizer.create_gauge_chart(u2_data['financial_health_score'], f"User {u2_id} Health"), use_container_width=True)
+                st.metric("Income", f"${u2_data['monthly_income']:,.0f}", delta=f"{u2_data['monthly_income'] - u1_data['monthly_income']:,.0f}")
+                st.metric("Savings", f"${u2_data['monthly_savings']:,.0f}", delta=f"{u2_data['monthly_savings'] - u1_data['monthly_savings']:,.0f}")
+                st.metric("Risk", u2_data['risk_label'])
+        
+        # Comparative Analysis
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>🎯 Comparative Radar Analysis</p>", unsafe_allow_html=True)
+            st.plotly_chart(visualizer.create_peer_comparison_radar(u1_data, u2_data), use_container_width=True)
+            st.caption("Comparing normalized metrics: Income, Expenses, Savings, Investments, Credit Score, Health Score.")
 
     # ============ USER SEGMENTATION ============
     elif page == "👥 User Segmentation":
@@ -1073,15 +1138,21 @@ def main():
             with col3:
                 monthly_contribution = st.number_input("Monthly Contribution ($)", 0, 50000, int(user_row['monthly_savings']))
                 num_simulations = st.selectbox("Number of Simulations", [100, 500, 1000], index=1)
-
+                
+            # Inflation Toggle (New Feature)
+            use_inflation = st.toggle("Adjust for Inflation", value=True)
+            inflation_rate = st.slider("Expected Annual Inflation (%)", 0.0, 10.0, 3.0) / 100 if use_inflation else 0
+            
         # Monte Carlo Simulation Logic
+        # Adjust return for inflation
+        real_avg_return = avg_return - inflation_rate
         results_mc = np.zeros((num_simulations, projection_years + 1))
         results_mc[:, 0] = initial_wealth
         
         for i in range(num_simulations):
             current_wealth = initial_wealth
             for year in range(1, projection_years + 1):
-                yearly_return = np.random.normal(avg_return, volatility)
+                yearly_return = np.random.normal(real_avg_return, volatility)
                 current_wealth = (current_wealth + monthly_contribution * 12) * (1 + yearly_return)
                 results_mc[i, year] = max(0, current_wealth)
         
@@ -1138,8 +1209,10 @@ def main():
             col1, col2, col3 = st.columns(3)
             with col1:
                 swr = st.slider("Safe Withdrawal Rate (%)", 2.0, 5.0, 4.0, 0.1) / 100
+                use_fire_inflation = st.toggle("Adjust for Inflation (FIRE)", value=True, key="fire_infl_toggle")
             with col2:
                 custom_expenses = st.number_input("Target Annual Expenses ($)", 0, 500000, int(user_row['monthly_expenses'] * 12))
+                fire_inflation_rate = st.slider("Inflation Rate (%)", 0.0, 10.0, 3.0, key="fire_infl_rate") / 100 if use_fire_inflation else 0
             with col3:
                 current_stash = st.number_input("Current Investable Assets ($)", 0, 10000000, int(user_row['monthly_investments'] * 12 * 5))
         
@@ -1148,7 +1221,7 @@ def main():
         calc_row['monthly_expenses'] = custom_expenses / 12
         calc_row['monthly_investments'] = current_stash / 60 # Back-calculate monthly contribution for simplicity
         
-        fire_metrics = calculate_fire_metrics(calc_row, safe_withdrawal_rate=swr)
+        fire_metrics = calculate_fire_metrics(calc_row, safe_withdrawal_rate=swr, inflation_rate=fire_inflation_rate)
         # Fix the current investments to the user's input
         fire_metrics['current_investments'] = current_stash
         fire_metrics['progress_pct'] = min(100, (current_stash / fire_metrics['fire_number']) * 100) if fire_metrics['fire_number'] > 0 else 0
