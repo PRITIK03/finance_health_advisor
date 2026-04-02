@@ -299,7 +299,7 @@ def main():
         # Navigation
         page = st.radio(
             "Go to section:",
-            ["📊 Dashboard Overview", "🚨 Stress Test", "👥 User Segmentation", "🎯 Risk Prediction", 
+            ["📊 Dashboard Overview", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
              "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
