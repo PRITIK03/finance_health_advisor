@@ -573,6 +573,56 @@ class FinancialVisualizer:
         
         return fig
 
+    def create_user_comparison_chart(self, user_a: pd.Series, user_b: pd.Series) -> go.Figure:
+        """Create a grouped comparison chart for two users."""
+        categories = ['Income', 'Expenses', 'Savings', 'Investments', 'Credit Score', 'Health Score']
+        values_a = [
+            user_a['monthly_income'],
+            user_a['monthly_expenses'],
+            user_a['monthly_savings'],
+            user_a['monthly_investments'],
+            user_a['credit_score'],
+            user_a['financial_health_score']
+        ]
+        values_b = [
+            user_b['monthly_income'],
+            user_b['monthly_expenses'],
+            user_b['monthly_savings'],
+            user_b['monthly_investments'],
+            user_b['credit_score'],
+            user_b['financial_health_score']
+        ]
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=categories,
+            y=values_a,
+            name='User A',
+            marker_color='#2563eb',
+            hovertemplate="%{x}<br>User A: %{y:,.1f}<extra></extra>"
+        ))
+        fig.add_trace(go.Bar(
+            x=categories,
+            y=values_b,
+            name='User B',
+            marker_color='#10b981',
+            hovertemplate="%{x}<br>User B: %{y:,.1f}<extra></extra>"
+        ))
+
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            title='Side-by-Side Metric Comparison',
+            barmode='group',
+            height=420,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            font=dict(family="Inter, sans-serif"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+
+        return fig
+
     def create_interest_savings_chart(self, results: dict) -> go.Figure:
         """Create chart comparing total interest paid."""
         
