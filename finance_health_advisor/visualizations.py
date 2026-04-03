@@ -853,6 +853,47 @@ class FinancialVisualizer:
         
         return fig
 
+    def create_emergency_fund_chart(self, metrics: dict) -> go.Figure:
+        """Create an emergency fund drawdown chart for crisis simulations."""
+        history = metrics.get('balance_history', [])
+        months = list(range(len(history)))
+        benchmark_month = 6
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=months,
+            y=history,
+            mode='lines+markers',
+            fill='tozeroy',
+            name='Remaining Fund',
+            line=dict(color='#ef4444', width=3, shape='spline'),
+            fillcolor='rgba(239, 68, 68, 0.10)',
+            hovertemplate="Month %{x}<br>Balance: $%{y:,.0f}<extra></extra>"
+        ))
+
+        fig.add_vline(
+            x=benchmark_month,
+            line_dash='dash',
+            line_color='#2563eb',
+            annotation_text='6-month benchmark',
+            annotation_position='top right'
+        )
+
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            title='Emergency Fund Survival Timeline',
+            xaxis_title='Months Into Crisis',
+            yaxis_title='Remaining Fund ($)',
+            height=360,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=30, r=30),
+            showlegend=False
+        )
+
+        return fig
+
     def create_subscription_audit_chart(self, monthly_df: pd.DataFrame, user_id: int) -> go.Figure:
         """Analyze subscriptions and suggest audit."""
         user_monthly = monthly_df[monthly_df['user_id'] == user_id]

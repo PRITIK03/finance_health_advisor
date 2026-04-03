@@ -164,38 +164,73 @@ def calculate_fire_metrics(user_row: pd.Series, safe_withdrawal_rate: float = 0.
     }
 
 
-def calculate_emergency_fund_stress_test(user_row: pd.Series, crisis_type: str = "Job Loss") -> dict:
+def calculate_emergency_fund_stress_test(
+    user_row: pd.Series,
+    crisis_type: str = "Job Loss",
+    emergency_fund_months: int = 6
+) -> dict:
     """
-    Simulate how many months the current emergency fund lasts under different crises.
+    Estimate emergency fund resilience under common crises.
     crisis_type: 'Job Loss', 'Medical Emergency', 'Major Repair'
     """
-    current_savings = user_row['monthly_savings'] * 6 # Assumption: 6 months of savings is the fund
-    monthly_expenses = user_row['monthly_expenses']
-    
-    # Adjust expenses based on crisis
-    if crisis_type == "Job Loss":
-        # Cut discretionary spending (30% reduction)
-        crisis_expenses = monthly_expenses * 0.7
-        impact_message = "Reduced discretionary spending by 30%."
-    elif crisis_type == "Medical Emergency":
-        # Immediate one-time cost + slightly higher monthly
-        current_savings -= 5000 # One-time $5k medical bill
-        crisis_expenses = monthly_expenses * 1.1 # 10% more for follow-ups
-        impact_message = "Paid $5,000 upfront + 10% monthly increase."
-    else: # Major Repair
-        current_savings -= 3000
-        crisis_expenses = monthly_expenses
-        impact_message = "Paid $3,000 one-time repair cost."
-        
-    months_buffer = max(0, current_savings / crisis_expenses) if crisis_expenses > 0 else 100
-    
+    monthly_expenses = float(user_row['monthly_expenses'])
+    initial_fund = max(0.0, float(user_row['monthly_savings']) * emergency_fund_months)
+
+    crisis_profiles = {
+        "Job Loss": {
+            "expense_multiplier": 0.70,
+            "one_time_cost": 0.0,
+            "impact_message": "Discretionary spending is reduced by 30% during income disruption."
+        },
+        "Medical Emergency": {
+            "expense_multiplier": 1.10,
+            "one_time_cost": 5000.0,
+            "impact_message": "A one-time medical bill hits first, then follow-up costs raise monthly spending."
+        },
+        "Major Repair": {
+            "expense_multiplier": 1.00,
+            "one_time_cost": 3000.0,
+            "impact_message": "A large repair is paid upfront while monthly living costs stay unchanged."
+        }
+    }
+
+    profile = crisis_profiles.get(crisis_type, crisis_profiles["Job Loss"])
+    crisis_expenses = monthly_expenses * profile["expense_multiplier"]
+    remaining_fund_start = max(0.0, initial_fund - profile["one_time_cost"])
+    months_buffer = (
+        remaining_fund_start / crisis_expenses if crisis_expenses > 0 else float('inf')
+    )
+    recommended_fund = crisis_expenses * 6
+    fund_gap = max(0.0, recommended_fund - remaining_fund_start)
+
+    balance_history = [remaining_fund_start]
+    running_balance = remaining_fund_start
+    for _ in range(1, 25):
+        running_balance = max(0.0, running_balance - crisis_expenses)
+        balance_history.append(running_balance)
+        if running_balance <= 0:
+            break
+
+    if months_buffer >= 6:
+        safety_band = "Strong"
+    elif months_buffer >= 3:
+        safety_band = "Moderate"
+    else:
+        safety_band = "Fragile"
+
     return {
         'months_buffer': months_buffer,
         'crisis_expenses': crisis_expenses,
-        'initial_fund': user_row['monthly_savings'] * 6,
-        'remaining_fund_start': current_savings,
-        'impact_message': impact_message,
-        'is_safe': months_buffer >= 6
+        'initial_fund': initial_fund,
+        'remaining_fund_start': remaining_fund_start,
+        'impact_message': profile["impact_message"],
+        'is_safe': months_buffer >= 6,
+        'recommended_fund': recommended_fund,
+        'fund_gap': fund_gap,
+        'emergency_fund_months': emergency_fund_months,
+        'one_time_cost': profile["one_time_cost"],
+        'safety_band': safety_band,
+        'balance_history': balance_history
     }
 
 

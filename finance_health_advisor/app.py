@@ -473,7 +473,7 @@ def main():
     elif page == "🚨 Stress Test":
         st.header("Emergency Fund Stress Test")
         
-        st.info("Simulate how your finances would handle common life crises and see how long your emergency fund would last.")
+        st.info("Model how your emergency fund performs during common financial shocks and compare it against the 6-month safety benchmark.")
         
         # User selector
         selected_user_id = st.selectbox(
@@ -482,26 +482,48 @@ def main():
             format_func=lambda x: f"User {x}"
         )
         user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
-        
-        # Crisis selector
-        crisis_type = st.radio(
-            "Select Crisis Scenario:",
-            ["Job Loss", "Medical Emergency", "Major Repair"],
-            horizontal=True
+
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>⚙️ Stress Parameters</p>", unsafe_allow_html=True)
+            col1, col2 = st.columns(2)
+            with col1:
+                crisis_type = st.radio(
+                    "Select Crisis Scenario:",
+                    ["Job Loss", "Medical Emergency", "Major Repair"],
+                    horizontal=True
+                )
+            with col2:
+                emergency_fund_months = st.slider(
+                    "Emergency Fund Assumption (Months of Savings)",
+                    1, 12, 6
+                )
+
+        stress_results = calculate_emergency_fund_stress_test(
+            user_row,
+            crisis_type=crisis_type,
+            emergency_fund_months=emergency_fund_months
         )
         
-        # Run stress test
-        stress_results = calculate_emergency_fund_stress_test(user_row, crisis_type)
-        
         # Metrics
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Emergency Fund (Estimated)", f"${stress_results['initial_fund']:,.0f}")
         with col2:
             st.metric("Survival Buffer", f"{stress_results['months_buffer']:.1f} months")
         with col3:
-            st.metric("Survival Status", "Safe ✅" if stress_results['is_safe'] else "At Risk ⚠️", 
-                      delta=f"{stress_results['months_buffer'] - 6:.1f} mo vs benchmark", delta_color="normal")
+            st.metric(
+                "Fund Gap",
+                f"${stress_results['fund_gap']:,.0f}",
+                delta="On target" if stress_results['fund_gap'] == 0 else "Below target",
+                delta_color="inverse"
+            )
+        with col4:
+            st.metric(
+                "Safety Band",
+                stress_results['safety_band'],
+                delta=f"{stress_results['months_buffer'] - 6:.1f} mo vs benchmark",
+                delta_color="normal"
+            )
             
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -509,30 +531,43 @@ def main():
         
         with col1:
             with st.container(border=True):
-                st.markdown("<p class='card-title'>🚨 Crisis Impact</p>", unsafe_allow_html=True)
-                st.write(f"**Crisis:** {crisis_type}")
+                st.markdown("<p class='card-title'>🛟 Resilience Snapshot</p>", unsafe_allow_html=True)
+                st.plotly_chart(
+                    visualizer.create_gauge_chart(
+                        min(100, (stress_results['months_buffer'] / 6) * 100),
+                        "Emergency Readiness",
+                        target=100
+                    ),
+                    use_container_width=True
+                )
+                st.write(f"**Scenario:** {crisis_type}")
                 st.info(stress_results['impact_message'])
+                st.write(f"**One-Time Shock:** `${stress_results['one_time_cost']:,.0f}`")
                 st.write(f"**Monthly Crisis Expenses:** `${stress_results['crisis_expenses']:,.0f}`")
-                st.write(f"**Starting Fund for Crisis:** `${stress_results['remaining_fund_start']:,.0f}`")
+                st.write(f"**Available Fund After Shock:** `${stress_results['remaining_fund_start']:,.0f}`")
+                st.write(f"**Recommended 6-Month Buffer:** `${stress_results['recommended_fund']:,.0f}`")
         
         with col2:
             with st.container(border=True):
                 st.markdown("<p class='card-title'>📅 Survival Timeline</p>", unsafe_allow_html=True)
-                
-                # Plot survival
-                months = list(range(1, int(stress_results['months_buffer']) + 2))
-                remaining_fund = [max(0, stress_results['remaining_fund_start'] - stress_results['crisis_expenses'] * m) for m in months]
-                
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(x=months, y=remaining_fund, fill='tozeroy', name='Emergency Fund', line_color='#ef4444'))
-                fig.add_hline(y=0, line_color='black')
-                fig.update_layout(
-                    template="plotly_white",
-                    xaxis_title="Months Into Crisis",
-                    yaxis_title="Remaining Fund ($)",
-                    margin=dict(t=30, b=30, l=30, r=30)
+                st.plotly_chart(
+                    visualizer.create_emergency_fund_chart(stress_results),
+                    use_container_width=True
                 )
-                st.plotly_chart(fig, use_container_width=True)
+
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>💡 Action Plan</p>", unsafe_allow_html=True)
+            if stress_results['is_safe']:
+                st.success("Your current buffer clears the 6-month benchmark for this scenario.")
+            elif stress_results['months_buffer'] >= 3:
+                st.warning("You have some protection, but the buffer is thinner than the recommended emergency reserve.")
+            else:
+                st.error("This scenario drains your fund quickly. Building liquidity should be a near-term priority.")
+
+            monthly_gap_savings = stress_results['fund_gap'] / 12 if stress_results['fund_gap'] > 0 else 0
+            st.write(
+                f"Closing the gap over 12 months would require about **${monthly_gap_savings:,.0f}/month** in extra reserve savings."
+            )
 
     # ============ COMPARISON MODE ============
     elif page == "👥 Comparison Mode":
