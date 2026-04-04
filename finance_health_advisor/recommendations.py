@@ -320,24 +320,107 @@ class RecommendationsEngine:
                 'suggestion': 'Consider: Growth ETFs, Small-cap index funds, International emerging markets, Sector-specific investments.'
             })
         
-        # Tax-advantaged accounts
-        recommendations.append({
-            'category': 'Tax Strategy',
-            'status': 'good',
-            'message': 'Tax-Advantaged Account Recommendations',
-            'suggestion': 'Maximize 401(k) contributions (especially employer match), Roth IRA, and HSAs before taxable accounts.'
-        })
+        return recommendations
 
-        # Tax Optimization (New Feature)
-        annual_income = income * 12
-        if annual_income > 50000:
-            recommendations.append({
-                'category': 'Tax Strategy',
-                'status': 'info',
-                'message': f'With an annual income of ${annual_income:,.0f}, you are in a higher tax bracket.',
-                'suggestion': 'Maximize your 401(k) and HSA contributions to reduce your taxable income.'
+    def get_tax_profile(self, user_data: Dict) -> Dict:
+        """Create a simplified tax optimization profile and opportunities."""
+        monthly_income = user_data.get('monthly_income', 0)
+        monthly_investments = user_data.get('monthly_investments', 0)
+        age = user_data.get('age', 30)
+        risk_label = user_data.get('risk_label', 'Medium')
+        annual_income = monthly_income * 12
+
+        if annual_income < 25000:
+            marginal_rate = 0.10
+            bracket = '10%'
+        elif annual_income < 50000:
+            marginal_rate = 0.12
+            bracket = '12%'
+        elif annual_income < 100000:
+            marginal_rate = 0.22
+            bracket = '22%'
+        elif annual_income < 190000:
+            marginal_rate = 0.24
+            bracket = '24%'
+        else:
+            marginal_rate = 0.32
+            bracket = '32%+'
+
+        current_401k = min(monthly_investments * 12 * 0.45, 23000)
+        current_hsa = min(monthly_investments * 12 * 0.15, 4150)
+        current_ira = min(monthly_investments * 12 * 0.20, 7000 if age < 50 else 8000)
+
+        employer_match_room = max(0.0, min(annual_income * 0.04, 4000) - current_401k * 0.15)
+        extra_401k_room = max(0.0, 23000 - current_401k)
+        extra_hsa_room = max(0.0, 4150 - current_hsa)
+        extra_ira_room = max(0.0, (7000 if age < 50 else 8000) - current_ira)
+
+        prioritized_actions = [
+            ('401(k) match', employer_match_room, 'Capture full employer match first.'),
+            ('HSA', extra_hsa_room, 'Use HSA contributions for triple tax advantage if eligible.'),
+            ('401(k)', extra_401k_room, 'Increase payroll deferrals to reduce taxable income.'),
+            ('IRA', extra_ira_room, 'Fund IRA space after employer plan and HSA priorities.')
+        ]
+        prioritized_actions = [item for item in prioritized_actions if item[1] > 0]
+
+        top_actions = []
+        for name, room, note in prioritized_actions[:3]:
+            top_actions.append({
+                'account': name,
+                'remaining_room': room,
+                'estimated_tax_savings': room * marginal_rate,
+                'note': note
             })
-        
+
+        total_estimated_savings = sum(item['estimated_tax_savings'] for item in top_actions)
+        profile_label = 'High Opportunity' if total_estimated_savings >= 3000 else 'Moderate Opportunity' if total_estimated_savings >= 1200 else 'Basic Opportunity'
+
+        return {
+            'annual_income': annual_income,
+            'marginal_rate': marginal_rate,
+            'tax_bracket': bracket,
+            'current_401k': current_401k,
+            'current_hsa': current_hsa,
+            'current_ira': current_ira,
+            'actions': top_actions,
+            'estimated_tax_savings': total_estimated_savings,
+            'opportunity_label': profile_label,
+            'preferred_strategy': 'Traditional pre-tax focus' if marginal_rate >= 0.22 or risk_label in ['High', 'Very High'] else 'Blend of Roth and pre-tax accounts'
+        }
+
+    def get_tax_recommendations(self, user_data: Dict) -> List[Dict]:
+        """Generate tax optimization recommendations."""
+        tax_profile = self.get_tax_profile(user_data)
+        recommendations = [{
+            'category': 'Tax Bracket',
+            'status': 'info',
+            'message': f'Estimated marginal tax bracket: {tax_profile["tax_bracket"]}',
+            'suggestion': f'Current strategy bias: {tax_profile["preferred_strategy"]}.'
+        }]
+
+        if tax_profile['estimated_tax_savings'] > 0:
+            recommendations.append({
+                'category': 'Savings Opportunity',
+                'status': 'good' if tax_profile['estimated_tax_savings'] >= 2000 else 'info',
+                'message': f'Estimated annual tax savings opportunity: ${tax_profile["estimated_tax_savings"]:,.0f}',
+                'suggestion': 'Prioritize the highest-impact tax-advantaged accounts before adding more taxable investments.'
+            })
+        else:
+            recommendations.append({
+                'category': 'Savings Opportunity',
+                'status': 'good',
+                'message': 'Most major tax-advantaged contribution space appears well used.',
+                'suggestion': 'Maintain contribution discipline and review withholding, Roth vs Traditional mix, and tax-loss harvesting opportunities.'
+            })
+
+        for action in tax_profile['actions']:
+            recommendations.append({
+                'category': action['account'],
+                'status': 'warning' if action['remaining_room'] > 3000 else 'info',
+                'message': f'Remaining contribution room: ${action["remaining_room"]:,.0f}',
+                'suggestion': f'{action["note"]} Estimated tax benefit: ${action["estimated_tax_savings"]:,.0f}.'
+            })
+
         return recommendations
 
     def get_diversification_profile(self, user_data: Dict) -> Dict:
@@ -474,7 +557,8 @@ class RecommendationsEngine:
             'budget': self.get_budget_recommendations(user_data),
             'debt': self.get_debt_recommendations(user_data),
             'savings': self.get_savings_recommendations(user_data),
-            'investments': self.get_investment_recommendations(user_data)
+            'investments': self.get_investment_recommendations(user_data),
+            'tax': self.get_tax_recommendations(user_data)
         }
     
     def generate_user_recommendations(self, user_id: int) -> Dict[str, List[Dict]]:
@@ -494,7 +578,8 @@ class RecommendationsEngine:
                 'budget': [],
                 'debt': [],
                 'savings': [],
-                'investments': []
+                'investments': [],
+                'tax': []
             }
         
         user_data = user_row.iloc[0].to_dict()

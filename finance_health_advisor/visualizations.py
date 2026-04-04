@@ -894,6 +894,58 @@ class FinancialVisualizer:
         fig.add_hline(y=0, line_color='#94a3b8', line_width=1)
         return fig
 
+    def create_tax_opportunity_chart(self, tax_profile: dict) -> go.Figure:
+        """Create a bar chart for remaining tax-advantaged contribution room."""
+        actions = tax_profile.get('actions', [])
+        if not actions:
+            fig = go.Figure()
+            fig.update_layout(
+                template=MODERN_TEMPLATE,
+                title='Tax Opportunity Overview',
+                height=260,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                margin=dict(t=50, b=20, l=20, r=20),
+                annotations=[dict(text="No major contribution gaps detected", showarrow=False, x=0.5, y=0.5, xref='paper', yref='paper')]
+            )
+            return fig
+
+        labels = [item['account'] for item in actions]
+        remaining_room = [item['remaining_room'] for item in actions]
+        estimated_savings = [item['estimated_tax_savings'] for item in actions]
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=labels,
+            y=remaining_room,
+            name='Remaining Room',
+            marker_color='#2563eb',
+            hovertemplate="%{x}<br>Remaining room: $%{y:,.0f}<extra></extra>"
+        ))
+        fig.add_trace(go.Scatter(
+            x=labels,
+            y=estimated_savings,
+            mode='lines+markers',
+            name='Estimated Tax Savings',
+            line=dict(color='#10b981', width=3),
+            marker=dict(size=9),
+            yaxis='y2',
+            hovertemplate="%{x}<br>Tax savings: $%{y:,.0f}<extra></extra>"
+        ))
+
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            title='Tax Opportunity Overview',
+            height=320,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            yaxis=dict(title='Contribution Room ($)'),
+            yaxis2=dict(title='Tax Savings ($)', overlaying='y', side='right', showgrid=False),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        return fig
+
     def create_fire_progress_chart(self, metrics: dict) -> go.Figure:
         """Create a chart showing progress towards FIRE goals."""
         
