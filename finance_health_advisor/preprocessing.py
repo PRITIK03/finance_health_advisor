@@ -234,6 +234,63 @@ def calculate_emergency_fund_stress_test(
     }
 
 
+def calculate_subscription_audit(monthly_df: pd.DataFrame, user_id: int) -> tuple[pd.DataFrame, dict]:
+    """Estimate recurring subscription leakage and optimization potential for a user."""
+    user_monthly = monthly_df[monthly_df['user_id'] == user_id]
+    avg_sub_budget = float(user_monthly['Subscriptions'].mean()) if not user_monthly.empty else 0.0
+
+    catalog = [
+        {'name': 'Netflix', 'cost': 19.99, 'usage_score': 88},
+        {'name': 'Spotify', 'cost': 10.99, 'usage_score': 72},
+        {'name': 'Gym Membership', 'cost': 45.00, 'usage_score': 28},
+        {'name': 'Cloud Storage', 'cost': 9.99, 'usage_score': 81},
+        {'name': 'News Subscription', 'cost': 15.00, 'usage_score': 42},
+        {'name': 'Meal App Premium', 'cost': 12.99, 'usage_score': 35},
+        {'name': 'Productivity Suite', 'cost': 14.99, 'usage_score': 67},
+    ]
+
+    selected = []
+    running_total = 0.0
+    threshold = max(avg_sub_budget * 1.35, 25.0)
+    for item in catalog:
+        if running_total + item['cost'] <= threshold:
+            selected.append(item.copy())
+            running_total += item['cost']
+
+    if not selected:
+        selected.append(catalog[0].copy())
+
+    audit_df = pd.DataFrame(selected)
+    audit_df['annual_cost'] = audit_df['cost'] * 12
+    audit_df['usage'] = pd.cut(
+        audit_df['usage_score'],
+        bins=[-1, 39, 69, 100],
+        labels=['Low', 'Medium', 'High']
+    )
+    audit_df['recommendation'] = audit_df['usage'].map({
+        'Low': 'Cancel or downgrade',
+        'Medium': 'Review and bundle',
+        'High': 'Keep'
+    })
+    audit_df['potential_monthly_savings'] = np.where(
+        audit_df['usage'] == 'Low',
+        audit_df['cost'],
+        np.where(audit_df['usage'] == 'Medium', audit_df['cost'] * 0.35, 0.0)
+    )
+    audit_df = audit_df.sort_values(['usage_score', 'cost'], ascending=[True, False]).reset_index(drop=True)
+
+    summary = {
+        'estimated_monthly_total': float(audit_df['cost'].sum()),
+        'estimated_annual_total': float(audit_df['annual_cost'].sum()),
+        'potential_monthly_savings': float(audit_df['potential_monthly_savings'].sum()),
+        'potential_annual_savings': float(audit_df['potential_monthly_savings'].sum() * 12),
+        'high_risk_count': int((audit_df['usage'] == 'Low').sum()),
+        'services_count': int(len(audit_df))
+    }
+
+    return audit_df, summary
+
+
 def calculate_debt_paydown(debts: list, extra_monthly_payment: float = 0) -> dict:
     """
     Simulate debt paydown using Snowball and Avalanche methods.

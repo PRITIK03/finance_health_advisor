@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data_generator import generate_full_dataset, calculate_financial_health_score
-from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown, calculate_emergency_fund_stress_test
+from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown, calculate_emergency_fund_stress_test, calculate_subscription_audit
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
@@ -454,15 +454,47 @@ def main():
         with tab3:
             st.info("💡 **Subscription Leakage Detection:** AI analyzes your recurring costs to identify low-usage services.")
             selected_user_id = st.selectbox("Select User for Audit", users_df['user_id'].unique(), key="sub_audit_user")
+            audit_df, audit_summary = calculate_subscription_audit(monthly_df, selected_user_id)
+
+            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+            with metric_col1:
+                st.metric("Active Services", audit_summary['services_count'])
+            with metric_col2:
+                st.metric("Monthly Cost", f"${audit_summary['estimated_monthly_total']:,.0f}")
+            with metric_col3:
+                st.metric("Potential Savings", f"${audit_summary['potential_monthly_savings']:,.0f}/mo")
+            with metric_col4:
+                st.metric("High-Risk Leaks", audit_summary['high_risk_count'])
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
             col1, col2 = st.columns([2, 1])
             with col1:
                 with st.container(border=True):
-                    st.plotly_chart(visualizer.create_subscription_audit_chart(monthly_df, selected_user_id), use_container_width=True)
+                    st.plotly_chart(visualizer.create_subscription_audit_chart(audit_df), use_container_width=True)
             with col2:
-                st.markdown("### 🚨 High Risk Leaks")
-                st.error("Gym Subscription (Low Usage)")
-                st.warning("News Publication (Medium Usage)")
-                st.success("Netflix (High Usage - Keep)")
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>🚨 Priority Actions</p>", unsafe_allow_html=True)
+                    risky_items = audit_df[audit_df['usage'].isin(['Low', 'Medium'])]
+                    if risky_items.empty:
+                        st.success("No major subscription leaks detected.")
+                    else:
+                        for _, row in risky_items.iterrows():
+                            if row['usage'] == 'Low':
+                                st.error(f"{row['name']}: {row['recommendation']}")
+                            else:
+                                st.warning(f"{row['name']}: {row['recommendation']}")
+
+                    st.markdown("---")
+                    st.write(f"**Annual Savings Potential:** `${audit_summary['potential_annual_savings']:,.0f}`")
+                    st.write(f"**Annual Subscription Spend:** `${audit_summary['estimated_annual_total']:,.0f}`")
+
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>📋 Subscription Review Table</p>", unsafe_allow_html=True)
+                st.dataframe(
+                    audit_df[['name', 'cost', 'annual_cost', 'usage', 'recommendation', 'potential_monthly_savings']],
+                    use_container_width=True
+                )
                 
         with tab4:
             with st.container(border=True):

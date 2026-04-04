@@ -944,38 +944,17 @@ class FinancialVisualizer:
 
         return fig
 
-    def create_subscription_audit_chart(self, monthly_df: pd.DataFrame, user_id: int) -> go.Figure:
-        """Analyze subscriptions and suggest audit."""
-        user_monthly = monthly_df[monthly_df['user_id'] == user_id]
-        avg_sub = user_monthly['Subscriptions'].mean()
-        
-        # Mocking individual subscriptions for audit simulation
-        subs = [
-            {'name': 'Netflix', 'cost': 19.99, 'usage': 'High'},
-            {'name': 'Spotify', 'cost': 10.99, 'usage': 'Medium'},
-            {'name': 'Gym', 'cost': 45.00, 'usage': 'Low'},
-            {'name': 'Cloud Storage', 'cost': 9.99, 'usage': 'High'},
-            {'name': 'News', 'cost': 15.00, 'usage': 'Low'}
-        ]
-        
-        # Filter to match user's average subscription spending roughly
-        total = 0
-        final_subs = []
-        for s in subs:
-            if total + s['cost'] <= avg_sub * 1.5:
-                final_subs.append(s)
-                total += s['cost']
-        
-        df_subs = pd.DataFrame(final_subs)
-        
+    def create_subscription_audit_chart(self, audit_df: pd.DataFrame) -> go.Figure:
+        """Create a subscription audit chart from audit output."""
         fig = px.bar(
-            df_subs, 
-            x='name', 
-            y='cost', 
+            audit_df,
+            x='name',
+            y='cost',
             color='usage',
             color_discrete_map={'High': '#10b981', 'Medium': '#f59e0b', 'Low': '#ef4444'},
             title='Subscription Cost Audit',
-            labels={'usage': 'Usage Level', 'cost': 'Monthly Cost ($)', 'name': 'Service'}
+            labels={'usage': 'Usage Level', 'cost': 'Monthly Cost ($)', 'name': 'Service'},
+            hover_data={'annual_cost': ':.2f', 'potential_monthly_savings': ':.2f'}
         )
         
         fig.update_layout(
