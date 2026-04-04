@@ -278,31 +278,23 @@ class RecommendationsEngine:
         
         recommendations = []
         
-        # Risk profile based on age and risk label
-        risk_tolerance = self._calculate_risk_tolerance(age, risk_label, financial_health)
-        
-        # Investment allocation based on risk tolerance
-        if risk_tolerance == 'Conservative':
-            allocations = {'Stocks': 30, 'Bonds': 50, 'Cash': 20}
-            strategy = 'Focus on stable, income-generating investments with lower volatility.'
-        elif risk_tolerance == 'Moderate Conservative':
-            allocations = {'Stocks': 45, 'Bonds': 40, 'Cash': 15}
-            strategy = 'Balanced approach with emphasis on capital preservation with some growth potential.'
-        elif risk_tolerance == 'Moderate':
-            allocations = {'Stocks': 60, 'Bonds': 30, 'Cash': 10}
-            strategy = 'Growth-oriented portfolio with moderate risk for long-term wealth building.'
-        elif risk_tolerance == 'Moderate Aggressive':
-            allocations = {'Stocks': 75, 'Bonds': 20, 'Cash': 5}
-            strategy = 'Higher equity allocation for long-term growth, accepting more volatility.'
-        else:  # Aggressive
-            allocations = {'Stocks': 90, 'Bonds': 5, 'Cash': 5}
-            strategy = 'Maximum growth potential with high equity allocation, suitable for long time horizons.'
+        diversification_profile = self.get_diversification_profile(user_data)
+        risk_tolerance = diversification_profile['risk_tolerance']
+        allocations = diversification_profile['target_allocation']
+        strategy = diversification_profile['strategy']
         
         recommendations.append({
             'category': 'Asset Allocation',
             'status': 'info',
             'message': f'Risk Tolerance: {risk_tolerance}',
             'suggestion': f'Recommended allocation: Stocks {allocations["Stocks"]}%, Bonds {allocations["Bonds"]}%, Cash {allocations["Cash"]}%. {strategy}'
+        })
+
+        recommendations.append({
+            'category': 'Diversification Score',
+            'status': 'good' if diversification_profile['diversification_score'] >= 75 else 'warning',
+            'message': f'Portfolio diversification score: {diversification_profile["diversification_score"]:.0f}/100',
+            'suggestion': diversification_profile['rebalance_hint']
         })
         
         # Specific investment suggestions based on risk
@@ -347,6 +339,84 @@ class RecommendationsEngine:
             })
         
         return recommendations
+
+    def get_diversification_profile(self, user_data: Dict) -> Dict:
+        """Create a simple current-vs-target diversification profile for the UI."""
+        age = user_data.get('age', 30)
+        risk_label = user_data.get('risk_label', 'Medium')
+        financial_health = user_data.get('financial_health_score', 50)
+        income = user_data.get('monthly_income', 0)
+        investment_rate = (user_data.get('monthly_investments', 0) / income) if income > 0 else 0
+        debt_ratio = (user_data.get('total_debt', 0) / max(income * 12, 1))
+
+        risk_tolerance = self._calculate_risk_tolerance(age, risk_label, financial_health)
+        target_allocation = self._get_target_allocation(risk_tolerance)
+
+        if risk_tolerance == 'Conservative':
+            current_allocation = {'Stocks': 35, 'Bonds': 40, 'Cash': 15, 'Real Estate': 5, 'Crypto': 0, 'Alternatives': 5}
+        elif risk_tolerance == 'Moderate Conservative':
+            current_allocation = {'Stocks': 48, 'Bonds': 28, 'Cash': 12, 'Real Estate': 7, 'Crypto': 1, 'Alternatives': 4}
+        elif risk_tolerance == 'Moderate':
+            current_allocation = {'Stocks': 58, 'Bonds': 18, 'Cash': 10, 'Real Estate': 8, 'Crypto': 2, 'Alternatives': 4}
+        elif risk_tolerance == 'Moderate Aggressive':
+            current_allocation = {'Stocks': 68, 'Bonds': 12, 'Cash': 7, 'Real Estate': 7, 'Crypto': 3, 'Alternatives': 3}
+        else:
+            current_allocation = {'Stocks': 78, 'Bonds': 7, 'Cash': 5, 'Real Estate': 5, 'Crypto': 3, 'Alternatives': 2}
+
+        if investment_rate < 0.08:
+            current_allocation['Cash'] += 5
+            current_allocation['Stocks'] -= 5
+        if debt_ratio > 0.35:
+            current_allocation['Cash'] += 3
+            current_allocation['Crypto'] = max(0, current_allocation['Crypto'] - 2)
+            current_allocation['Stocks'] -= 1
+
+        categories = list(current_allocation.keys())
+        absolute_gap = sum(abs(current_allocation[k] - target_allocation[k]) for k in categories)
+        diversification_score = max(0.0, 100 - (absolute_gap / 2))
+        gap_by_asset = {k: round(target_allocation[k] - current_allocation[k], 1) for k in categories}
+        largest_gap_asset = max(gap_by_asset, key=lambda x: abs(gap_by_asset[x]))
+        largest_gap = gap_by_asset[largest_gap_asset]
+
+        if largest_gap > 0:
+            rebalance_hint = f"Consider increasing {largest_gap_asset} exposure by about {abs(largest_gap):.0f}% over time."
+        elif largest_gap < 0:
+            rebalance_hint = f"Consider trimming {largest_gap_asset} exposure by about {abs(largest_gap):.0f}% and reallocating gradually."
+        else:
+            rebalance_hint = "Your portfolio is reasonably aligned with the target allocation."
+
+        return {
+            'risk_tolerance': risk_tolerance,
+            'target_allocation': target_allocation,
+            'current_allocation': current_allocation,
+            'diversification_score': diversification_score,
+            'gap_by_asset': gap_by_asset,
+            'largest_gap_asset': largest_gap_asset,
+            'rebalance_hint': rebalance_hint,
+            'strategy': self._get_allocation_strategy(risk_tolerance)
+        }
+
+    def _get_target_allocation(self, risk_tolerance: str) -> Dict[str, int]:
+        """Return target allocation weights by risk tolerance."""
+        targets = {
+            'Conservative': {'Stocks': 30, 'Bonds': 45, 'Cash': 15, 'Real Estate': 5, 'Crypto': 0, 'Alternatives': 5},
+            'Moderate Conservative': {'Stocks': 45, 'Bonds': 30, 'Cash': 10, 'Real Estate': 8, 'Crypto': 2, 'Alternatives': 5},
+            'Moderate': {'Stocks': 60, 'Bonds': 20, 'Cash': 8, 'Real Estate': 7, 'Crypto': 2, 'Alternatives': 3},
+            'Moderate Aggressive': {'Stocks': 72, 'Bonds': 12, 'Cash': 6, 'Real Estate': 6, 'Crypto': 2, 'Alternatives': 2},
+            'Aggressive': {'Stocks': 82, 'Bonds': 6, 'Cash': 4, 'Real Estate': 4, 'Crypto': 2, 'Alternatives': 2}
+        }
+        return targets.get(risk_tolerance, targets['Moderate'])
+
+    def _get_allocation_strategy(self, risk_tolerance: str) -> str:
+        """Return a short strategy description for the target mix."""
+        strategies = {
+            'Conservative': 'Focus on stability, income, and lower drawdowns.',
+            'Moderate Conservative': 'Blend capital preservation with measured long-term growth.',
+            'Moderate': 'Balance growth and resilience across multiple asset classes.',
+            'Moderate Aggressive': 'Lean toward long-term growth while keeping some stabilizers.',
+            'Aggressive': 'Prioritize long-term capital appreciation and accept higher volatility.'
+        }
+        return strategies.get(risk_tolerance, strategies['Moderate'])
     
     def _calculate_risk_tolerance(self, age: int, risk_label: str, health_score: int) -> str:
         """

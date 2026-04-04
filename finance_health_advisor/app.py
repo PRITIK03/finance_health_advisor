@@ -1015,6 +1015,7 @@ def main():
             
             # Get recommendations
             user_recs = recommendations_engine.generate_user_recommendations(user_id)
+            diversification_profile = recommendations_engine.get_diversification_profile(user_row.to_dict())
             
             # Display recommendations in tabs
             tab1, tab2, tab3, tab4 = st.tabs(["💰 Budget", "💳 Debt", "🏦 Savings", "📈 Investments"])
@@ -1049,11 +1050,18 @@ def main():
             with tab4:
                 with st.container(border=True):
                     st.markdown("<p class='card-title'>📈 Investment Strategy</p>", unsafe_allow_html=True)
-                    
-                    # Diversification Radar (New Feature)
+
+                    metric_col1, metric_col2, metric_col3 = st.columns(3)
+                    with metric_col1:
+                        st.metric("Risk Tolerance", diversification_profile['risk_tolerance'])
+                    with metric_col2:
+                        st.metric("Diversification Score", f"{diversification_profile['diversification_score']:.0f}/100")
+                    with metric_col3:
+                        st.metric("Largest Gap", diversification_profile['largest_gap_asset'])
+
                     col1, col2 = st.columns([1, 1])
                     with col1:
-                        st.plotly_chart(visualizer.create_diversification_radar(user_row), use_container_width=True)
+                        st.plotly_chart(visualizer.create_diversification_radar(diversification_profile), use_container_width=True)
                     with col2:
                         st.markdown("**Investment Performance Insights:**")
                         for rec in user_recs['investments']:
@@ -1061,6 +1069,20 @@ def main():
                             st.markdown(f"**{status_color} {rec['category']}**: {rec['message']}")
                             st.markdown(f"   *💡 {rec['suggestion']}*")
                             st.markdown("")
+
+                    col3, col4 = st.columns([1.2, 0.8])
+                    with col3:
+                        st.plotly_chart(visualizer.create_diversification_gap_chart(diversification_profile), use_container_width=True)
+                    with col4:
+                        allocation_df = pd.DataFrame({
+                            'Asset Class': list(diversification_profile['current_allocation'].keys()),
+                            'Current %': list(diversification_profile['current_allocation'].values()),
+                            'Target %': [diversification_profile['target_allocation'][k] for k in diversification_profile['current_allocation'].keys()],
+                            'Gap %': [diversification_profile['gap_by_asset'][k] for k in diversification_profile['current_allocation'].keys()]
+                        })
+                        st.dataframe(allocation_df, use_container_width=True, hide_index=True)
+
+                    st.info(diversification_profile['rebalance_hint'])
         
         else:
             # Cohort Analysis

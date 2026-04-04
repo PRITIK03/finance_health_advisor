@@ -825,40 +825,73 @@ class FinancialVisualizer:
         )
         return fig
 
-    def create_diversification_radar(self, user_row: pd.Series) -> go.Figure:
-        """Create a radar chart for investment diversification."""
-        # Synthesize diversification data from user profile
-        # In a real app, this would come from a detailed portfolio
-        categories = ['Stocks', 'Bonds', 'Real Estate', 'Cash', 'Crypto', 'Commodities']
-        
-        # Heuristic based on risk label and income
-        if user_row['risk_label'] == 'Very Low':
-            values = [30, 40, 10, 15, 0, 5]
-        elif user_row['risk_label'] == 'Low':
-            values = [50, 20, 15, 10, 2, 3]
-        elif user_row['risk_label'] == 'Medium':
-            values = [60, 10, 10, 10, 5, 5]
-        else:
-            values = [70, 5, 5, 5, 10, 5]
-            
-        fig = go.Figure(data=go.Scatterpolar(
-            r=values,
+    def create_diversification_radar(self, profile: dict) -> go.Figure:
+        """Create a radar chart comparing current and target allocation."""
+        categories = list(profile['current_allocation'].keys())
+        current_values = [profile['current_allocation'][k] for k in categories]
+        target_values = [profile['target_allocation'][k] for k in categories]
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatterpolar(
+            r=current_values,
             theta=categories,
             fill='toself',
-            marker=dict(color='#2563eb'),
-            name='Current Allocation'
+            name='Current',
+            line_color='#2563eb',
+            fillcolor='rgba(37, 99, 235, 0.16)'
         ))
-        
+        fig.add_trace(go.Scatterpolar(
+            r=target_values,
+            theta=categories,
+            fill='toself',
+            name='Target',
+            line_color='#10b981',
+            fillcolor='rgba(16, 185, 129, 0.10)'
+        ))
+
         fig.update_layout(
             polar=dict(
                 radialaxis=dict(visible=True, range=[0, 100]),
                 bgcolor='rgba(0,0,0,0)'
             ),
-            showlegend=False,
-            height=350,
+            showlegend=True,
+            height=380,
             title="Portfolio Diversification",
-            margin=dict(t=50, b=20, l=30, r=30)
+            margin=dict(t=50, b=20, l=30, r=30),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
+        return fig
+
+    def create_diversification_gap_chart(self, profile: dict) -> go.Figure:
+        """Create a bar chart of target minus current allocation gaps."""
+        categories = list(profile['gap_by_asset'].keys())
+        gaps = [profile['gap_by_asset'][k] for k in categories]
+        colors = ['#10b981' if val >= 0 else '#ef4444' for val in gaps]
+
+        fig = go.Figure(go.Bar(
+            x=categories,
+            y=gaps,
+            marker_color=colors,
+            text=[f"{v:+.0f}%" for v in gaps],
+            textposition='auto',
+            hovertemplate="%{x}<br>Target Gap: %{y:+.1f}%<extra></extra>"
+        ))
+
+        fig.update_layout(
+            template=MODERN_TEMPLATE,
+            title='Rebalancing Gaps',
+            xaxis_title='Asset Class',
+            yaxis_title='Target - Current (%)',
+            height=330,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=50, b=20, l=20, r=20),
+            showlegend=False
+        )
+
+        fig.add_hline(y=0, line_color='#94a3b8', line_width=1)
         return fig
 
     def create_fire_progress_chart(self, metrics: dict) -> go.Figure:
