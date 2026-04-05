@@ -45,133 +45,71 @@ def main():
         layout="wide",
         initial_sidebar_state="expanded"
     )
-    
-    # Custom CSS
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    /* Global Styles */
-    html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        color: #1e293b !important;
-    }
-    
-    .stApp {
-        background-color: #f1f5f9 !important; /* Slightly more gray for better contrast with white cards */
-    }
 
-    /* Fix Metric visibility and layout */
-    [data-testid="stMetric"] {
-        background-color: #ffffff !important;
-        padding: 24px !important;
-        border-radius: 16px !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-        border: 1px solid #e2e8f0 !important;
-        transition: transform 0.2s ease-in-out;
-    }
-    
-    [data-testid="stMetric"]:hover {
-        transform: translateY(-2px);
-    }
+    # Sidebar
+    with st.sidebar:
+        st.markdown("<div style='text-align: center; padding-bottom: 20px;'>", unsafe_allow_html=True)
+        st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=80)
+        st.markdown("<h2 style='margin-top: 10px; color: #0f172a;'>Menu</h2>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    [data-testid="stMetricValue"] {
-        font-size: 2rem !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.2 !important;
-    }
+        # Theme Toggle
+        theme = st.toggle("🌙 Dark Mode", value=False)
 
-    [data-testid="stMetricLabel"] {
-        font-size: 0.875rem !important;
-        font-weight: 600 !important;
-        color: #64748b !important;
-        margin-bottom: 8px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-    
-    /* Container styling (using st.container(border=True)) */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #ffffff !important;
-        border-radius: 20px !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-        border: 1px solid #f1f5f9 !important;
-        margin-bottom: 24px !important;
-        padding: 2rem !important;
-    }
+        if theme:
+            st.markdown("""
+            <style>
+            .stApp { background-color: #0f172a !important; }
+            [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stMetric"], [data-testid="stSidebar"] {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+            .card-title, h1, h2, h3, [data-testid="stMetricValue"] { color: #f8fafc !important; }
+            .sidebar-text, [data-testid="stMetricLabel"], .stMarkdown p { color: #cbd5e1 !important; }
+            .stTabs [data-baseweb="tab"] { color: #94a3b8 !important; }
+            .stTabs [aria-selected="true"] { color: #3b82f6 !important; }
+            hr { border-color: #334155 !important; }
+            </style>
+            """, unsafe_allow_html=True)
 
-    /* Fix Plotly chart backgrounds */
-    .js-plotly-plot .plotly .bg {
-        fill: transparent !important;
-    }
+        # Navigation (add Goal Planner to menu)
+        page = st.radio(
+            "Go to section:",
+            ["📊 Dashboard Overview", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
+             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+            label_visibility="collapsed"
+        )
 
-    /* Fix Sidebar styling */
-    [data-testid="stSidebar"] {
-        background-color: #ffffff !important;
-        border-right: 1px solid #e2e8f0;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-        padding: 2rem 1rem !important;
-    }
+        # --- New: Goal Planner Quick Access ---
+        st.markdown("---")
+        st.subheader("🎯 My Goals")
+        if 'goals' not in st.session_state:
+            st.session_state['goals'] = []
+        if st.button("Add New Goal"):
+            st.session_state['show_goal_form'] = True
+        if st.session_state.get('goals'):
+            for goal in st.session_state['goals']:
+                st.markdown(f"- <b>{goal['name']}</b> ({goal['type']})<br>Target: <b>${goal['target']:,}</b> by <b>{goal['target_date']}</b>", unsafe_allow_html=True)
+        else:
+            st.caption("No goals set yet.")
 
-    [data-testid="stSidebarNav"] {
-        background-color: transparent !important;
-        padding-top: 1rem !important;
-    }
-
-    /* Main Content Padding */
-    .block-container {
-        padding: 3rem 4rem !important;
-        max-width: 1200px !important;
-        margin: 0 auto !important;
-    }
-
-    /* Tab styling - more modern */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-        border-bottom: 1px solid #e2e8f0;
-        margin-bottom: 2rem;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        height: 48px;
-        background-color: transparent !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-        font-size: 0.95rem !important;
-        padding: 0 12px !important;
-        border: none !important;
-        transition: all 0.2s ease;
-    }
-
-    .stTabs [aria-selected="true"] {
-        color: #2563eb !important;
-        font-weight: 700 !important;
-        border-bottom: 2px solid #2563eb !important;
-    }
-
-    /* Card Titles and Text */
-    .card-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .sidebar-text {
-        font-size: 0.9rem;
-        color: #475569;
-        line-height: 1.6;
-    }
-    
-    .highlight {
-        color: #2563eb;
-        font-weight: 600;
+        # Sidebar Info
+        st.markdown("---")
+        st.subheader("About Advisor")
+        st.markdown("""
+        <div class='sidebar-text'>
+        Uses <span class='highlight'>Advanced Machine Learning</span> to provide actionable financial intelligence.
+        <br><br>
+        <b>Key Modules:</b>
+        <ul>
+            <li>Predictive Risk Analysis</li>
+            <li>Monte Carlo Simulations</li>
+            <li>Peer Benchmarking</li>
+            <li>Anomaly Pattern Detection</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
     }
 
     /* Hide redundant elements */
@@ -375,8 +313,59 @@ def main():
             use_container_width=True
         )
     
+    # ============ GOAL PLANNER ============
+    if page == "🎯 Goal Planner":
+        st.header("Personalized Financial Goal Planner")
+        st.info("Set, track, and visualize your financial goals. Stay motivated and monitor your progress!")
+
+        if 'goals' not in st.session_state:
+            st.session_state['goals'] = []
+
+        # Goal creation form
+        if st.session_state.get('show_goal_form', False):
+            with st.form("goal_form", clear_on_submit=True):
+                name = st.text_input("Goal Name", max_chars=40)
+                goal_type = st.selectbox("Goal Type", ["Savings", "Debt Payoff", "Investment", "Other"])
+                target = st.number_input("Target Amount ($)", min_value=1, step=100)
+                target_date = st.date_input("Target Date")
+                submit = st.form_submit_button("Add Goal")
+                if submit and name and target > 0:
+                    st.session_state['goals'].append({
+                        'name': name,
+                        'type': goal_type,
+                        'target': int(target),
+                        'target_date': str(target_date),
+                        'progress': 0
+                    })
+                    st.session_state['show_goal_form'] = False
+                    st.success(f"Goal '{name}' added!")
+        else:
+            if st.button("➕ Add New Goal"):
+                st.session_state['show_goal_form'] = True
+
+        # List and update goals
+        if st.session_state.get('goals'):
+            for idx, goal in enumerate(st.session_state['goals']):
+                with st.container(border=True):
+                    st.markdown(f"### 🎯 {goal['name']} <span style='font-size: 1rem; color: #64748b;'>({goal['type']})</span>", unsafe_allow_html=True)
+                    st.write(f"**Target:** ${goal['target']:,} by {goal['target_date']}")
+                    progress = st.slider(f"Progress for {goal['name']}", 0, goal['target'], goal.get('progress', 0), key=f'goal_progress_{idx}')
+                    goal['progress'] = progress
+                    pct = (progress / goal['target']) * 100 if goal['target'] > 0 else 0
+                    st.progress(pct / 100, text=f"{pct:.1f}% of target")
+                    if pct >= 100:
+                        st.success("🎉 Goal achieved!")
+                    if st.button(f"Remove Goal: {goal['name']}", key=f'remove_goal_{idx}'):
+                        st.session_state['goals'].pop(idx)
+                        st.experimental_rerun()
+        else:
+            st.info("No goals set yet. Use 'Add New Goal' to get started!")
+
+        st.markdown("---")
+        st.caption("Tip: Add goals for savings, debt payoff, investments, or anything you want to track!")
+
     # ============ DASHBOARD OVERVIEW ============
-    if page == "📊 Dashboard Overview":
+    elif page == "📊 Dashboard Overview":
         st.header("Financial Executive Summary")
         
         # Summary Statistics
