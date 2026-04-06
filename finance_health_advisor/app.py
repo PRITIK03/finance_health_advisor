@@ -36,6 +36,12 @@ def train_models(users_df, monthly_df):
     return results, pipeline
 
 def main():
+    st.set_page_config(
+        page_title="Finance Health Advisor",
+        page_icon="💰",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
     # ============ ALERT & NOTIFICATION SYSTEM ============
     if page == "🔔 Alerts & Notifications":
         st.header("Alert & Notification System")
@@ -96,10 +102,6 @@ def main():
             st.success("No alerts triggered for the latest month.")
 
         st.caption("Alerts are checked on the latest available data. More advanced notification options coming soon!")
-        page_icon="💰",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
 
     # Sidebar
     with st.sidebar:
