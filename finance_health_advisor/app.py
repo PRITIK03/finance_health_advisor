@@ -35,65 +35,67 @@ def train_models(users_df, monthly_df):
     results, pipeline = train_all_models(users_df, monthly_df)
     return results, pipeline
 
-
 def main():
-        # ============ PREDICTIVE ANALYTICS & FORECASTING ============
-        if page == "🔮 Predictive Analytics":
-            st.header("Predictive Analytics & Forecasting")
-            st.info("Forecast your future savings using AI-powered models based on your spending and income trends.")
+    st.set_page_config(
+        page_title="Finance Health Advisor",
+        page_icon="💰",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
 
-            # User selector
-            selected_user_id = st.selectbox("Select User for Forecasting", users_df['user_id'].unique(), key="forecast_user")
-            user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id].sort_values('month')
+    # Sidebar
+    with st.sidebar:
+        st.markdown("<div style='text-align: center; padding-bottom: 20px;'>", unsafe_allow_html=True)
+        st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=80)
+        st.markdown("<h2 style='margin-top: 10px; color: #0f172a;'>Menu</h2>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-            # Use the forecasting model from results
-            model = results['forecasting']['model'] if 'forecasting' in results and 'model' in results['forecasting'] else None
-            if model is not None:
-                # Prepare features for the last available month
-                last_row = user_monthly.iloc[-1]
-                features = [
-                    last_row['income'],
-                    last_row['expenses'],
-                    last_row['savings'],
-                    last_row['Entertainment'],
-                    last_row['Shopping'],
-                    last_row['month'],
-                ]
-                # Predict next 6 months
-                months = [last_row['month'] + i for i in range(1, 7)]
-                preds = []
-                for m in months:
-                    f = features.copy()
-                    f[-1] = m
-                    pred = model.predict([f])[0]
-                    preds.append(pred)
-                # Plot
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(
-                    x=months,
-                    y=preds,
-                    mode='lines+markers',
-                    name='Predicted Savings',
-                    line=dict(color='#3b82f6', width=4, shape='spline'),
-                    marker=dict(size=10, borderwidth=2, color='white', line=dict(color='#3b82f6'))
-                ))
-                fig.update_layout(
-                    template="plotly_white",
-                    xaxis_title='Month',
-                    yaxis_title='Predicted Savings ($)',
-                    margin=dict(t=30, b=30, l=30, r=30),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)'
-                )
-                st.plotly_chart(fig, use_container_width=True)
-                # Table
-                df_pred = pd.DataFrame({"Month": months, "Predicted Savings": preds})
-                st.dataframe(df_pred, use_container_width=True, hide_index=True)
-            else:
-                st.warning("Forecasting model is not available.")
-            st.caption("Predictions are based on your latest financial profile and trends. For best results, keep your data up to date.")
+        # Theme Toggle
+        theme = st.toggle("🌙 Dark Mode", value=False)
 
+        if theme:
+            st.markdown("""
+            <style>
+            .stApp { background-color: #0f172a !important; }
+            [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stMetric"], [data-testid="stSidebar"] {
+                background-color: #1e293b !important;
+                    border-color: #334155 !important;
+                    color: #f1f5f9 !important;
+                }
+                .card-title, h1, h2, h3, [data-testid="stMetricValue"] { color: #f8fafc !important; }
+                .sidebar-text, [data-testid="stMetricLabel"], .stMarkdown p { color: #cbd5e1 !important; }
+                .stTabs [data-baseweb="tab"] { color: #94a3b8 !important; }
+                .stTabs [aria-selected="true"] { color: #3b82f6 !important; }
+                hr { border-color: #334155 !important; }
+                </style>
+                """, unsafe_allow_html=True)
+
+            # Navigation (add Expense Categorization to menu)
+            page = st.radio(
+                "Go to section:",
+                ["📊 Dashboard Overview", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
+                 "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+                label_visibility="collapsed"
+            )
+
+        # Load data
+        with st.spinner("Generating synthetic financial data..."):
+            users_df, monthly_df = load_data()
+
+        # Train models
+        with st.spinner("Training ML models..."):
+            results, pipeline = train_models(users_df, monthly_df)
+
+        # Preprocess data
+        preprocessor = FinancialDataPreprocessor()
+        users_processed = preprocessor.preprocess_users(users_df)
+        monthly_processed = preprocessor.preprocess_monthly(monthly_df)
+
+        # Visualizations
+        visualizer = FinancialVisualizer(users_df, monthly_df)
+
+        # Recommendations Engine
+        recommendations_engine = RecommendationsEngine(users_df, monthly_df)
     st.set_page_config(
         page_title="Finance Health Advisor",
         page_icon="💰",
