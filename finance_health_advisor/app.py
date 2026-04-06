@@ -37,6 +37,63 @@ def train_models(users_df, monthly_df):
 
 
 def main():
+        # ============ PREDICTIVE ANALYTICS & FORECASTING ============
+        if page == "🔮 Predictive Analytics":
+            st.header("Predictive Analytics & Forecasting")
+            st.info("Forecast your future savings using AI-powered models based on your spending and income trends.")
+
+            # User selector
+            selected_user_id = st.selectbox("Select User for Forecasting", users_df['user_id'].unique(), key="forecast_user")
+            user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id].sort_values('month')
+
+            # Use the forecasting model from results
+            model = results['forecasting']['model'] if 'forecasting' in results and 'model' in results['forecasting'] else None
+            if model is not None:
+                # Prepare features for the last available month
+                last_row = user_monthly.iloc[-1]
+                features = [
+                    last_row['income'],
+                    last_row['expenses'],
+                    last_row['savings'],
+                    last_row['Entertainment'],
+                    last_row['Shopping'],
+                    last_row['month'],
+                ]
+                # Predict next 6 months
+                months = [last_row['month'] + i for i in range(1, 7)]
+                preds = []
+                for m in months:
+                    f = features.copy()
+                    f[-1] = m
+                    pred = model.predict([f])[0]
+                    preds.append(pred)
+                # Plot
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=months,
+                    y=preds,
+                    mode='lines+markers',
+                    name='Predicted Savings',
+                    line=dict(color='#3b82f6', width=4, shape='spline'),
+                    marker=dict(size=10, borderwidth=2, color='white', line=dict(color='#3b82f6'))
+                ))
+                fig.update_layout(
+                    template="plotly_white",
+                    xaxis_title='Month',
+                    yaxis_title='Predicted Savings ($)',
+                    margin=dict(t=30, b=30, l=30, r=30),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                # Table
+                df_pred = pd.DataFrame({"Month": months, "Predicted Savings": preds})
+                st.dataframe(df_pred, use_container_width=True, hide_index=True)
+            else:
+                st.warning("Forecasting model is not available.")
+            st.caption("Predictions are based on your latest financial profile and trends. For best results, keep your data up to date.")
+
     st.set_page_config(
         page_title="Finance Health Advisor",
         page_icon="💰",
@@ -216,7 +273,7 @@ def main():
         page = st.radio(
             "Go to section:",
             ["📊 Dashboard Overview", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
-             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
         
