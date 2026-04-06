@@ -37,8 +37,6 @@ def train_models(users_df, monthly_df):
 
 
 def main():
-    """Main application function."""
-    
     st.set_page_config(
         page_title="Finance Health Advisor",
         page_icon="💰",
@@ -73,13 +71,61 @@ def main():
             </style>
             """, unsafe_allow_html=True)
 
-        # Navigation (add Goal Planner to menu)
+        # Navigation (add Expense Categorization to menu)
         page = st.radio(
             "Go to section:",
             ["📊 Dashboard Overview", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
-             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
+
+    # Load data
+    with st.spinner("Generating synthetic financial data..."):
+        users_df, monthly_df = load_data()
+
+    # Train models
+    with st.spinner("Training ML models..."):
+        results, pipeline = train_models(users_df, monthly_df)
+
+    # Preprocess data
+    preprocessor = FinancialDataPreprocessor()
+    users_processed = preprocessor.preprocess_users(users_df)
+    monthly_processed = preprocessor.preprocess_monthly(monthly_df)
+
+    # Visualizations
+    visualizer = FinancialVisualizer(users_df, monthly_df)
+
+    # Recommendations Engine
+    recommendations_engine = RecommendationsEngine(users_df, monthly_df)
+
+    # ============ EXPENSE CATEGORIZATION ============
+    if page == "💸 Expense Categorization":
+        st.header("Automated Expense Categorization")
+        st.info("View your expenses automatically categorized by AI for better spending insights.")
+
+        # User selector
+        selected_user_id = st.selectbox("Select User for Categorization", users_df['user_id'].unique(), key="expense_cat_user")
+        user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id]
+
+        spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
+        latest = user_monthly.sort_values('month').iloc[-1]
+        expense_breakdown = {cat: latest[cat] for cat in spending_cols}
+
+        # Pie chart
+        fig = px.pie(
+            names=list(expense_breakdown.keys()),
+            values=list(expense_breakdown.values()),
+            title="Current Month Expense Breakdown",
+            hole=0.4,
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Table
+        df_exp = pd.DataFrame({"Category": list(expense_breakdown.keys()), "Amount": list(expense_breakdown.values())})
+        st.dataframe(df_exp, use_container_width=True, hide_index=True)
+
+        st.caption("Categories are auto-detected based on your spending patterns. Future versions will use ML for smarter tagging.")
 
         # --- New: Goal Planner Quick Access ---
         st.markdown("---")
