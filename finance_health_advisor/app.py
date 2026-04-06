@@ -36,8 +36,66 @@ def train_models(users_df, monthly_df):
     return results, pipeline
 
 def main():
-    st.set_page_config(
-        page_title="Finance Health Advisor",
+    # ============ ALERT & NOTIFICATION SYSTEM ============
+    if page == "🔔 Alerts & Notifications":
+        st.header("Alert & Notification System")
+        st.info("Set up alerts for spending, savings, or unusual activity. Get notified when thresholds are crossed.")
+
+        # User selector
+        selected_user_id = st.selectbox("Select User for Alerts", users_df['user_id'].unique(), key="alert_user")
+        user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id].sort_values('month')
+        latest = user_monthly.iloc[-1]
+
+        # Session state for alerts
+        if 'alerts' not in st.session_state:
+            st.session_state['alerts'] = {}
+        user_alerts = st.session_state['alerts'].get(selected_user_id, [])
+
+        with st.form("add_alert_form"):
+            st.subheader("Add New Alert")
+            alert_type = st.selectbox("Alert Type", ["Spending Over Limit", "Savings Below Target", "Unusual Activity"])
+            if alert_type == "Spending Over Limit":
+                amount = st.number_input("Monthly Spending Limit ($)", min_value=100.0, value=2000.0, step=100.0)
+            elif alert_type == "Savings Below Target":
+                amount = st.number_input("Minimum Savings Target ($)", min_value=50.0, value=500.0, step=50.0)
+            else:
+                amount = None
+            submit = st.form_submit_button("Add Alert")
+            if submit:
+                alert = {"type": alert_type, "amount": amount}
+                user_alerts.append(alert)
+                st.session_state['alerts'][selected_user_id] = user_alerts
+                st.success("Alert added!")
+
+        # Show active alerts
+        st.subheader("Active Alerts")
+        if user_alerts:
+            for idx, alert in enumerate(user_alerts):
+                st.markdown(f"- **{alert['type']}**: {alert['amount'] if alert['amount'] is not None else 'N/A'}")
+                if st.button(f"Remove", key=f"remove_alert_{idx}"):
+                    user_alerts.pop(idx)
+                    st.session_state['alerts'][selected_user_id] = user_alerts
+                    st.experimental_rerun()
+        else:
+            st.caption("No alerts set for this user.")
+
+        # Check and display notifications
+        st.subheader("Notifications")
+        notifications = []
+        for alert in user_alerts:
+            if alert['type'] == "Spending Over Limit" and latest['expenses'] > alert['amount']:
+                notifications.append(f"🚨 Spending exceeded: ${latest['expenses']:.2f} > ${alert['amount']:.2f}")
+            elif alert['type'] == "Savings Below Target" and latest['savings'] < alert['amount']:
+                notifications.append(f"⚠️ Savings below target: ${latest['savings']:.2f} < ${alert['amount']:.2f}")
+            elif alert['type'] == "Unusual Activity" and latest.get('ml_anomaly', 0) == 1:
+                notifications.append("❗ Unusual spending/savings activity detected!")
+        if notifications:
+            for note in notifications:
+                st.warning(note)
+        else:
+            st.success("No alerts triggered for the latest month.")
+
+        st.caption("Alerts are checked on the latest available data. More advanced notification options coming soon!")
         page_icon="💰",
         layout="wide",
         initial_sidebar_state="expanded"
@@ -275,7 +333,7 @@ def main():
         page = st.radio(
             "Go to section:",
             ["📊 Dashboard Overview", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
-             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+             "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
         
