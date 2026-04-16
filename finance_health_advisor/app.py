@@ -193,10 +193,51 @@ def main():
         # Navigation (add Expense Categorization to menu)
         page = st.radio(
             "Go to section:",
-            ["📊 Dashboard Overview", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
+            ["📊 Dashboard Overview", "📈 Data Visualization Dashboard", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
              "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
+    # ============ DATA VISUALIZATION DASHBOARD ============
+    if page == "📈 Data Visualization Dashboard":
+        st.header("Comprehensive Data Visualization Dashboard")
+        st.info("Explore interactive charts and key metrics for your financial health.")
+
+        # User selector
+        selected_user_id = st.selectbox("Select User for Dashboard", users_df['user_id'].unique(), key="viz_dashboard_user")
+        user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id].sort_values('month')
+
+        # Summary statistics
+        st.subheader("Key Metrics")
+        summary = generate_summary_statistics(user_monthly)
+        st.metric("Net Worth", f"${summary['net_worth']:,}")
+        st.metric("Savings Rate", f"{summary['savings_rate']:.2f}%")
+        st.metric("Debt-to-Income Ratio", f"{summary['debt_to_income']:.2f}")
+
+        # Line chart: Net Worth Over Time
+        st.subheader("Net Worth Over Time")
+        fig1 = visualizer.plot_net_worth_over_time(user_monthly)
+        st.plotly_chart(fig1, use_container_width=True)
+
+        # Bar chart: Monthly Expenses by Category
+        st.subheader("Monthly Expenses by Category")
+        fig2 = visualizer.plot_expenses_by_category(user_monthly)
+        st.plotly_chart(fig2, use_container_width=True)
+
+        # Pie chart: Expense Breakdown (latest month)
+        st.subheader("Expense Breakdown (Latest Month)")
+        spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
+        latest = user_monthly.iloc[-1]
+        expense_breakdown = {cat: latest[cat] for cat in spending_cols}
+        fig3 = px.pie(
+            names=list(expense_breakdown.keys()),
+            values=list(expense_breakdown.values()),
+            title="Current Month Expense Breakdown",
+            hole=0.4,
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        st.plotly_chart(fig3, use_container_width=True)
+
+        st.caption("Visualizations are interactive. Use the dashboard to monitor your financial health trends and spot opportunities for improvement.")
 
     # Load data
     with st.spinner("Generating synthetic financial data..."):
