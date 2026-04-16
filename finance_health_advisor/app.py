@@ -193,10 +193,47 @@ def main():
         # Navigation (add Expense Categorization to menu)
         page = st.radio(
             "Go to section:",
-            ["📊 Dashboard Overview", "📈 Data Visualization Dashboard", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
+            ["📊 Dashboard Overview", "📈 Data Visualization Dashboard", "📚 Financial Tips & Education", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
              "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
+        # ============ FINANCIAL TIPS & EDUCATION CENTER ============
+        if page == "📚 Financial Tips & Education":
+            st.header("Personalized Financial Tips & Education Center")
+            st.info("Get actionable tips and learn about personal finance topics tailored to your situation.")
+
+            # User selector
+            selected_user_id = st.selectbox("Select User for Tips", users_df['user_id'].unique(), key="tips_user")
+            user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id].sort_values('month')
+            latest = user_monthly.iloc[-1]
+
+            # Example: Simple rules for tips (could be replaced with ML or more advanced logic)
+            tips = []
+            if latest['savings'] < 500:
+                tips.append("Increase your emergency fund to cover at least 3-6 months of expenses.")
+            if latest['debt'] > 0:
+                tips.append("Consider a debt repayment strategy such as the avalanche or snowball method.")
+            if latest['expenses'] > latest['income']:
+                tips.append("Your expenses exceed your income. Review your spending and set a budget.")
+            if latest['savings_rate'] < 10:
+                tips.append("Aim to save at least 10% of your income each month.")
+            if not tips:
+                tips.append("Great job! Your finances look healthy. Keep up the good work.")
+
+            st.subheader("Your Personalized Tips")
+            for tip in tips:
+                st.success(tip)
+
+            st.markdown("---")
+            st.subheader("Learn More: Financial Education")
+            st.markdown("""
+            - [Budgeting Basics](https://www.investopedia.com/budgeting-5076033)
+            - [Understanding Credit Scores](https://www.consumerfinance.gov/ask-cfpb/what-is-a-credit-score-en-315/)
+            - [Emergency Funds](https://www.nerdwallet.com/article/finance/emergency-fund)
+            - [Debt Repayment Strategies](https://www.thebalance.com/debt-snowball-vs-debt-avalanche-960884)
+            - [Investing 101](https://www.investopedia.com/investing-4427785)
+            """)
+            st.caption("Tips are generated based on your latest financial data. Educational links are for general guidance.")
     # ============ DATA VISUALIZATION DASHBOARD ============
     if page == "📈 Data Visualization Dashboard":
         st.header("Comprehensive Data Visualization Dashboard")
