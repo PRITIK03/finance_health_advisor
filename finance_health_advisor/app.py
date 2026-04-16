@@ -197,43 +197,6 @@ def main():
              "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
             label_visibility="collapsed"
         )
-            # ============ SECURE DOCUMENT UPLOAD & STORAGE ============
-            if page == "🗂️ Document Upload & Storage":
-                st.header("Secure Document Upload & Storage")
-                st.info("Upload and securely store your financial documents, receipts, and statements.")
-
-                # User selector
-                selected_user_id = st.selectbox("Select User for Document Storage", users_df['user_id'].unique(), key="doc_user")
-
-                # Session state for uploaded files
-                if 'uploaded_docs' not in st.session_state:
-                    st.session_state['uploaded_docs'] = {}
-                user_docs = st.session_state['uploaded_docs'].get(selected_user_id, [])
-
-                uploaded_file = st.file_uploader("Upload Document (PDF, JPG, PNG, CSV)", type=["pdf", "jpg", "jpeg", "png", "csv"], key="file_uploader")
-                if uploaded_file is not None:
-                    # Store file in session state (in-memory, not persistent)
-                    file_info = {
-                        "name": uploaded_file.name,
-                        "type": uploaded_file.type,
-                        "data": uploaded_file.getvalue()
-                    }
-                    user_docs.append(file_info)
-                    st.session_state['uploaded_docs'][selected_user_id] = user_docs
-                    st.success(f"Uploaded: {uploaded_file.name}")
-
-                st.subheader("Your Uploaded Documents")
-                if user_docs:
-                    for idx, doc in enumerate(user_docs):
-                        col1, col2 = st.columns([3,1])
-                        with col1:
-                            st.markdown(f"**{doc['name']}** ({doc['type']})")
-                        with col2:
-                            st.download_button("Download", data=doc['data'], file_name=doc['name'], mime=doc['type'], key=f"download_{idx}")
-                else:
-                    st.caption("No documents uploaded yet.")
-
-                st.caption("Documents are stored in memory for this session only. For production, integrate with secure cloud storage.")
         # ============ FINANCIAL TIPS & EDUCATION CENTER ============
         if page == "📚 Financial Tips & Education":
             st.header("Personalized Financial Tips & Education Center")
