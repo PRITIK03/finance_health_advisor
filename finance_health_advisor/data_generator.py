@@ -283,14 +283,15 @@ def generate_anomalies(df: pd.DataFrame, anomaly_rate: float = 0.02) -> pd.DataF
     return df
 
 
-def generate_full_dataset(num_users: int = 10000) -> tuple:
-    """Generate complete dataset for all users and months."""
+def generate_full_dataset(total_users: int = 10000, offset: int = 0, limit: int = None) -> tuple:
+    """Generate complete dataset for all users and months, with pagination."""
     
-    print(f"Generating financial data for {num_users} users...")
+    print(f"Generating financial data for users {offset + 1} to {offset + (limit if limit is not None else total_users)} out of {total_users}...")
     
-    # Generate user profiles
+    # Generate user profiles for the current page
     user_profiles = []
-    for user_id in range(1, num_users + 1):
+    end_user_id = offset + (limit if limit is not None else total_users)
+    for user_id in range(offset + 1, min(end_user_id + 1, total_users + 1)):
         profile = generate_user_profile(user_id)
         profile['financial_health_score'] = calculate_financial_health_score(profile)
         profile['risk_label'] = get_risk_label(profile['financial_health_score'])
@@ -298,7 +299,7 @@ def generate_full_dataset(num_users: int = 10000) -> tuple:
     
     users_df = pd.DataFrame(user_profiles)
     
-    # Generate monthly data (12 months per user)
+    # Generate monthly data (12 months per user) only for the current page's users
     monthly_records = []
     for _, user in users_df.iterrows():
         for month in range(1, 13):
@@ -325,13 +326,11 @@ def generate_full_dataset(num_users: int = 10000) -> tuple:
     
     monthly_df = pd.DataFrame(monthly_records)
     
-    # Inject anomalies
+    # Inject anomalies (this will only affect the current page's monthly data)
     monthly_df = generate_anomalies(monthly_df, anomaly_rate=0.015)
     
-    print(f"Generated {len(users_df)} user profiles")
-    print(f"Generated {len(monthly_df)} monthly records")
-    print(f"Financial Health Score range: {users_df['financial_health_score'].min():.1f} - {users_df['financial_health_score'].max():.1f}")
-    print(f"Risk distribution:\n{users_df['risk_label'].value_counts()}")
+    print(f"Generated {len(users_df)} user profiles for the current page")
+    print(f"Generated {len(monthly_df)} monthly records for the current page")
     
     return users_df, monthly_df
 
