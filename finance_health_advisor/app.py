@@ -22,10 +22,12 @@ from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
 
 
+TOTAL_USERS = 10000 # Define total number of users for synthetic data
+
 @st.cache_data
-def load_data():
-    """Load or generate data."""
-    users_df, monthly_df = generate_full_dataset(10000)
+def load_data(offset: int = 0, limit: int = None):
+    """Load or generate data with pagination."""
+    users_df, monthly_df = generate_full_dataset(total_users=TOTAL_USERS, offset=offset, limit=limit)
     return users_df, monthly_df
 
 
@@ -276,9 +278,36 @@ def main():
 
         st.caption("Visualizations are interactive. Use the dashboard to monitor your financial health trends and spot opportunities for improvement.")
 
+    # Initialize session state for pagination
+    if 'page_number' not in st.session_state:
+        st.session_state['page_number'] = 1
+    if 'page_size' not in st.session_state:
+        st.session_state['page_size'] = 100 # Default page size
+
+    # Pagination controls
+    st.sidebar.header("Data Pagination")
+    page_size_options = [50, 100, 200, 500]
+    st.session_state['page_size'] = st.sidebar.selectbox("Users per page", page_size_options, index=1) # Default to 100
+
+    total_pages = (TOTAL_USERS // st.session_state['page_size']) + (1 if TOTAL_USERS % st.session_state['page_size'] > 0 else 0)
+    st.sidebar.write(f"Page {st.session_state['page_number']} of {total_pages}")
+
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.button("Previous Page", use_container_width=True, disabled=(st.session_state['page_number'] == 1)):
+            st.session_state['page_number'] -= 1
+            st.experimental_rerun()
+    with col2:
+        if st.button("Next Page", use_container_width=True, disabled=(st.session_state['page_number'] == total_pages)):
+            st.session_state['page_number'] += 1
+            st.experimental_rerun()
+
+    offset = (st.session_state['page_number'] - 1) * st.session_state['page_size']
+    limit = st.session_state['page_size']
+
     # Load data
-    with st.spinner("Generating synthetic financial data..."):
-        users_df, monthly_df = load_data()
+    with st.spinner(f"Generating synthetic financial data for page {st.session_state['page_number']}..."):
+        users_df, monthly_df = load_data(offset=offset, limit=limit)
 
     # Train models
     with st.spinner("Training ML models..."):
