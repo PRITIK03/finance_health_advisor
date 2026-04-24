@@ -1,3 +1,4 @@
+import streamlit as st
 st.set_page_config(
     page_title="Finance Health Advisor",
     page_icon="💰",
@@ -10,7 +11,6 @@ Streamlit Web Application
 Interactive dashboard for Financial Health Advisor
 """
 
-import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -23,7 +23,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data_generator import generate_full_dataset, calculate_financial_health_score
-from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown, calculate_emergency_fund_stress_test, calculate_subscription_audit, calculate_financial_stress_test
+from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown, calculate_emergency_fund_stress_test, calculate_subscription_audit, calculate_financial_stress_test, calculate_wealth_projection
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
@@ -497,6 +497,115 @@ elif page == "🚨 Stress Test":
         
         st.markdown("---")
         st.write("This simulation provides a simplified view. For personalized advice, consult a financial expert.")
+
+# ============ WEALTH PROJECTION ============
+elif page == "🚀 Wealth Projection":
+    st.header("Wealth Projection Simulator")
+    
+    st.info("Project your financial future! See how your investments and savings can grow over time with compound interest.")
+    
+    # Input parameters for wealth projection
+    with st.container(border=True):
+        st.markdown("<p class='card-title'>⚙️ Projection Parameters</p>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            initial_capital = st.number_input(
+                "Initial Capital ($)",
+                min_value=0,
+                value=10000,
+                step=1000
+            )
+            monthly_contribution = st.number_input(
+                "Monthly Contribution ($)",
+                min_value=0,
+                value=500,
+                step=50
+            )
+        with col2:
+            annual_return_rate = st.slider(
+                "Annual Return Rate (%)",
+                min_value=0.0,
+                max_value=20.0,
+                value=7.0,
+                step=0.1,
+                format="%.1f"
+            ) / 100 # Convert percentage to decimal
+            projection_years = st.slider(
+                "Projection Years",
+                min_value=1,
+                max_value=50,
+                value=20,
+                step=1
+            )
+    
+    # Calculate wealth projection
+    projection_results = calculate_wealth_projection(
+        initial_capital=float(initial_capital),
+        monthly_contribution=float(monthly_contribution),
+        annual_return_rate=float(annual_return_rate),
+        projection_years=int(projection_years)
+    )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([1.5, 2.5])
+    
+    with col1:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>📈 Projection Summary</p>", unsafe_allow_html=True)
+            st.metric("Projected Final Wealth", f"${projection_results['final_wealth']:,.0f}")
+            st.write(f"**Initial Capital:** ${initial_capital:,.0f}")
+            st.write(f"**Monthly Contribution:** ${monthly_contribution:,.0f}")
+            st.write(f"**Annual Return Rate:** {annual_return_rate*100:.1f}%")
+            st.write(f"**Projection Period:** {projection_years} years")
+            
+            # Gauge for wealth growth
+            growth_pct = ((projection_results['final_wealth'] - initial_capital) / initial_capital) * 100 if initial_capital > 0 else 0
+            st.plotly_chart(
+                visualizer.create_gauge_chart(
+                    min(1000, growth_pct), # Cap gauge at 1000% for display
+                    "Wealth Growth (%)",
+                    target=100 # Target can be adjusted based on typical growth
+                ),
+                use_container_width=True
+            )
+    
+    with col2:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>📊 Wealth Growth Over Time</p>", unsafe_allow_html=True)
+            
+            fig = go.Figure()
+            months = list(range(len(projection_results['wealth_history'])))
+            
+            fig.add_trace(go.Scatter(
+                x=[m / 12 for m in months], # Convert months to years for x-axis
+                y=projection_results['wealth_history'],
+                mode='lines',
+                name='Projected Wealth',
+                line=dict(color='#10b981', width=3)
+            ))
+            
+            fig.update_layout(
+                template="plotly_white",
+                xaxis_title="Years",
+                yaxis_title="Wealth ($)",
+                hovermode="x unified",
+                margin=dict(t=30, b=30, l=30, r=30),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+    with st.container(border=True):
+        st.markdown("<p class='card-title'>💡 Insights & Recommendations</p>", unsafe_allow_html=True)
+        st.write("This projection demonstrates the power of compound interest. Even small, consistent contributions can lead to significant wealth over long periods.")
+        if annual_return_rate < 0.05:
+            st.warning("Consider exploring investment options with potentially higher returns, while being mindful of associated risks.")
+        if monthly_contribution == 0:
+            st.info("Regular contributions significantly boost wealth growth. Even a small monthly amount can make a big difference.")
+        st.markdown("---")
+        st.write("Remember that these are projections based on assumptions. Actual returns may vary. Consult a financial advisor for personalized investment strategies.")
 
 # ============ COMPARISON MODE ============
 elif page == "👥 Comparison Mode":

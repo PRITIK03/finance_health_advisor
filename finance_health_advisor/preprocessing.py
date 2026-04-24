@@ -508,6 +508,44 @@ def calculate_financial_stress_test(
     }
 
 
+def calculate_wealth_projection(
+    initial_capital: float,
+    monthly_contribution: float,
+    annual_return_rate: float,
+    projection_years: int
+) -> dict:
+    """
+    Projects wealth growth over time using compound interest.
+    
+    Args:
+        initial_capital (float): Starting amount of money.
+        monthly_contribution (float): Amount contributed each month.
+        annual_return_rate (float): Annual rate of return (e.g., 0.07 for 7%).
+        projection_years (int): Number of years to project wealth.
+        
+    Returns:
+        dict: Contains final projected wealth and a history of wealth over time.
+    """
+    
+    monthly_return_rate = (1 + annual_return_rate)**(1/12) - 1
+    total_months = projection_years * 12
+    
+    wealth_history = [initial_capital]
+    current_wealth = initial_capital
+    
+    for _ in range(total_months):
+        current_wealth = (current_wealth + monthly_contribution) * (1 + monthly_return_rate)
+        wealth_history.append(current_wealth)
+        
+    final_wealth = current_wealth
+    
+    return {
+        "final_wealth": final_wealth,
+        "wealth_history": wealth_history,
+        "projection_years": projection_years
+    }
+
+
 def prepare_clustering_data(df: pd.DataFrame) -> pd.DataFrame:
     """Prepare data specifically for clustering analysis."""
     
