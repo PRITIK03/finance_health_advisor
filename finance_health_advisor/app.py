@@ -110,11 +110,11 @@ with st.sidebar:
     # Quick Stats
     st.markdown("---")
     st.subheader("System Insights")
-    # avg_health = users_df['financial_health_score'].mean() # This will be calculated after data load
-    # health_status = "Good" if avg_health > 70 else "Fair" if avg_health > 50 else "Poor"
+    avg_health = users_df['financial_health_score'].mean() # This will be calculated after data load
+    health_status = "Good" if avg_health > 70 else "Fair" if avg_health > 50 else "Poor"
     
     # Micro Bullet for Average Health vs Target
-    # st.plotly_chart(visualizer.create_mini_bullet(avg_health, 85, "Avg Health Index", color="#10b981"), use_container_width=True)
+    st.plotly_chart(visualizer.create_mini_bullet(avg_health, 85, "Avg Health Index", color="#10b981"), use_container_width=True)
     
     # Financial Milestone Badges (New Feature)
     st.markdown("---")
@@ -129,13 +129,13 @@ with st.sidebar:
     
     # Top 3 Spending Categories Mini Bar
     st.markdown("---")
-    # spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
-    # top_spending = monthly_df[spending_cols].mean().sort_values(ascending=False).head(3)
-    # st.plotly_chart(visualizer.create_mini_bar(top_spending.index.tolist(), top_spending.values.tolist(), "Top 3 Avg Monthly Spend", color="#f59e0b"), use_container_width=True)
+    spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
+    top_spending = monthly_df[spending_cols].mean().sort_values(ascending=False).head(3)
+    st.plotly_chart(visualizer.create_mini_bar(top_spending.index.tolist(), top_spending.values.tolist(), "Top 3 Avg Monthly Spend", color="#f59e0b"), use_container_width=True)
     
-    # st.markdown(f"""
-    # <div class='sidebar-text'>
-    # <b>Health Index:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
+    st.markdown(f"""
+    <div class='sidebar-text'>
+    <b>Health Index:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
     # <b>Model Status:</b> <span style='color: #10b981; font-weight: bold;'>Active</span><br>
     # <b>User Base:</b> <span class='highlight'>{len(users_df):,}</span>
     # </div>
