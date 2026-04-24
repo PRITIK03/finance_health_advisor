@@ -352,6 +352,162 @@ def calculate_debt_paydown(debts: list, extra_monthly_payment: float = 0) -> dic
     }
 
 
+def calculate_financial_stress_test(
+    user_row: pd.Series,
+    scenario_name: str = "Job Loss (6 months)",
+    simulation_months: int = 24
+) -> dict:
+    """
+    Simulate various financial stress test scenarios for a user.
+    Scenarios: 'Job Loss (6 months)', 'Medical Emergency', 'Market Downturn', 'Unexpected Large Expense'
+    """
+    monthly_income = float(user_row.get('monthly_income', 0))
+    monthly_expenses = float(user_row.get('monthly_expenses', 0))
+    monthly_savings = float(user_row.get('monthly_savings', 0))
+    total_debt = float(user_row.get('total_debt', 0))
+    current_investments = float(user_row.get('monthly_investments', 0)) * 12 * 2 # Assuming 2 years of investments
+    emergency_fund = monthly_savings * 6 # A proxy for readily available cash
+
+    # Ensure non-negative values for calculations
+    monthly_income = max(0.0, monthly_income)
+    monthly_expenses = max(0.0, monthly_expenses)
+    monthly_savings = max(0.0, monthly_savings)
+    total_debt = max(0.0, total_debt)
+    current_investments = max(0.0, current_investments)
+    emergency_fund = max(0.0, emergency_fund)
+
+    # Initial state
+    initial_liquid_assets = emergency_fund + monthly_savings # Simplified liquid assets
+    initial_net_worth = initial_liquid_assets + current_investments - total_debt
+
+    scenario_profiles = {
+        "Job Loss (6 months)": {
+            "income_reduction_pct": 1.0, # 100% income loss
+            "expense_increase_pct": 0.0,
+            "one_time_cost": 0.0,
+            "investment_impact_pct": 0.0,
+            "duration_months": 6, # Duration of income loss
+            "message": "Simulates 6 months of complete income loss, relying on savings and reduced spending."
+        },
+        "Medical Emergency": {
+            "income_reduction_pct": 0.0,
+            "expense_increase_pct": 0.10, # 10% increase in expenses due to ongoing care
+            "one_time_cost": 10000.0, # Large upfront medical bill
+            "investment_impact_pct": 0.0,
+            "duration_months": 12,
+            "message": "Simulates a large one-time medical bill and increased ongoing medical expenses."
+        },
+        "Market Downturn (20% loss)": {
+            "income_reduction_pct": 0.0,
+            "expense_increase_pct": 0.0,
+            "one_time_cost": 0.0,
+            "investment_impact_pct": 0.20, # 20% loss in investments
+            "duration_months": 1, # Immediate impact
+            "message": "Simulates an immediate 20% loss in investment portfolio value."
+        },
+        "Unexpected Large Expense": {
+            "income_reduction_pct": 0.0,
+            "expense_increase_pct": 0.0,
+            "one_time_cost": 5000.0, # e.g., car repair, home repair deductible
+            "investment_impact_pct": 0.0,
+            "duration_months": 1, # Immediate impact
+            "message": "Simulates an unexpected large one-time expense that must be paid immediately."
+        }
+    }
+
+    profile = scenario_profiles.get(scenario_name, scenario_profiles["Job Loss (6 months)"])
+
+    # Apply immediate impacts
+    sim_income = monthly_income * (1 - profile["income_reduction_pct"])
+    sim_expenses = monthly_expenses * (1 + profile["expense_increase_pct"])
+    
+    # Deduct one-time cost from liquid assets first, then investments
+    remaining_one_time_cost = profile["one_time_cost"]
+    if remaining_one_time_cost > 0:
+        if initial_liquid_assets >= remaining_one_time_cost:
+            initial_liquid_assets -= remaining_one_time_cost
+            remaining_one_time_cost = 0
+        else:
+            remaining_one_time_cost -= initial_liquid_assets
+            initial_liquid_assets = 0
+            if current_investments >= remaining_one_time_cost:
+                current_investments -= remaining_one_time_cost
+                remaining_one_time_cost = 0
+            else:
+                current_investments = 0
+                # Debt might increase here, but for simplicity, we'll just track asset depletion
+
+    # Apply investment impact
+    current_investments *= (1 - profile["investment_impact_pct"])
+
+    # Simulation over time
+    liquid_assets_history = [initial_liquid_assets]
+    investments_history = [current_investments]
+    net_worth_history = [initial_net_worth]
+    
+    current_liquid_assets = initial_liquid_assets
+    current_investments_val = current_investments
+    months_of_resilience = 0
+    
+    for month in range(simulation_months):
+        # Calculate cash flow for the month
+        if month < profile["duration_months"]:
+            cash_flow = sim_income - sim_expenses
+        else:
+            cash_flow = monthly_income - sim_expenses # Income returns to normal after duration
+
+        current_liquid_assets += cash_flow
+        
+        # If liquid assets run out, start drawing from investments
+        if current_liquid_assets < 0:
+            draw_from_investments = abs(current_liquid_assets)
+            current_investments_val -= draw_from_investments
+            current_liquid_assets = 0 # Reset liquid assets after drawing
+
+        # Track resilience
+        if current_liquid_assets >= 0 and current_investments_val >= 0:
+            months_of_resilience += 1
+        else:
+            # If both liquid assets and investments are depleted, stop counting resilience
+            pass # Keep tracking history, but resilience stops
+
+        liquid_assets_history.append(current_liquid_assets)
+        investments_history.append(current_investments_val)
+        net_worth_history.append(current_liquid_assets + current_investments_val - total_debt) # Debt assumed constant for now
+
+    final_liquid_assets = current_liquid_assets
+    final_investments = current_investments_val
+    final_net_worth = final_liquid_assets + final_investments - total_debt
+
+    # Determine outcome
+    if final_liquid_assets < 0 or final_investments < 0:
+        outcome = "Severe Impact: Assets depleted, potential for debt increase."
+        severity = "High"
+    elif months_of_resilience < simulation_months:
+        outcome = f"Moderate Impact: Assets lasted {months_of_resilience} months, but depleted before simulation end."
+        severity = "Medium"
+    else:
+        outcome = "Low Impact: Assets remained positive throughout the simulation."
+        severity = "Low"
+
+    return {
+        "scenario_name": scenario_name,
+        "message": profile["message"],
+        "initial_liquid_assets": initial_liquid_assets,
+        "initial_investments": current_investments, # This is after initial impact
+        "initial_net_worth": initial_net_worth,
+        "final_liquid_assets": final_liquid_assets,
+        "final_investments": final_investments,
+        "final_net_worth": final_net_worth,
+        "months_of_resilience": months_of_resilience,
+        "outcome": outcome,
+        "severity": severity,
+        "liquid_assets_history": liquid_assets_history,
+        "investments_history": investments_history,
+        "net_worth_history": net_worth_history
+    }
+
+
 def prepare_clustering_data(df: pd.DataFrame) -> pd.DataFrame:
     """Prepare data specifically for clustering analysis."""
     
