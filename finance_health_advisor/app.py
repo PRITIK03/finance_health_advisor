@@ -55,6 +55,31 @@ with col2_header:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
+
+# Initialize session state for pagination
+if 'page_number' not in st.session_state:
+    st.session_state['page_number'] = 1
+if 'page_size' not in st.session_state:
+    st.session_state['page_size'] = 100 # Default page size
+
+# Pagination controls
+page_size_options = [50, 100, 200, 500]
+st.session_state['page_size'] = st.sidebar.selectbox("Users per page", page_size_options, index=1) # Default to 100
+total_pages = (TOTAL_USERS // st.session_state['page_size']) + (1 if TOTAL_USERS % st.session_state['page_size'] > 0 else 0)
+offset = (st.session_state['page_number'] - 1) * st.session_state['page_size']
+limit = st.session_state['page_size']
+
+# Load data and initialize objects before sidebar
+with st.spinner(f"Generating synthetic financial data for page {st.session_state['page_number']}..."):
+    users_df, monthly_df = load_data(offset=offset, limit=limit)
+with st.spinner("Training ML models..."):
+    results, pipeline = train_models(users_df, monthly_df)
+preprocessor = FinancialDataPreprocessor()
+users_processed = preprocessor.preprocess_users(users_df)
+monthly_processed = preprocessor.preprocess_monthly(monthly_df)
+visualizer = FinancialVisualizer(users_df, monthly_df)
+recommendations_engine = RecommendationsEngine(users_df, monthly_df)
+
 # Sidebar
 with st.sidebar:
     st.markdown("<div style='text-align: center; padding-bottom: 20px;'>", unsafe_allow_html=True)
@@ -112,10 +137,8 @@ with st.sidebar:
     st.subheader("System Insights")
     avg_health = users_df['financial_health_score'].mean() # This will be calculated after data load
     health_status = "Good" if avg_health > 70 else "Fair" if avg_health > 50 else "Poor"
-    
     # Micro Bullet for Average Health vs Target
     st.plotly_chart(visualizer.create_mini_bullet(avg_health, 85, "Avg Health Index", color="#10b981"), use_container_width=True)
-    
     # Financial Milestone Badges (New Feature)
     st.markdown("---")
     st.subheader("🏆 Achievements")
@@ -126,13 +149,11 @@ with st.sidebar:
     with col2_ach:
         st.markdown("🌟 **Elite Credit**")
         st.markdown("🏦 **Wealth Builder**")
-    
     # Top 3 Spending Categories Mini Bar
     st.markdown("---")
     spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
     top_spending = monthly_df[spending_cols].mean().sort_values(ascending=False).head(3)
     st.plotly_chart(visualizer.create_mini_bar(top_spending.index.tolist(), top_spending.values.tolist(), "Top 3 Avg Monthly Spend", color="#f59e0b"), use_container_width=True)
-    
     st.markdown(f"""
     <div class='sidebar-text'>
     <b>Health Index:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
@@ -140,7 +161,6 @@ with st.sidebar:
     # <b>User Base:</b> <span class='highlight'>{len(users_df):,}</span>
     # </div>
     # """, unsafe_allow_html=True)
-    
     # Export Data Button
     st.markdown("---")
     st.subheader("Export Center")
