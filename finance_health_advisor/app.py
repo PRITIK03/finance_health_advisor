@@ -252,45 +252,67 @@ if page == "🎯 Goal Planner":
 
 # ============ DASHBOARD OVERVIEW ============
 elif page == "📊 Dashboard Overview":
+
     st.header("Financial Executive Summary")
-    
-    # Summary Statistics
     stats = generate_summary_statistics(users_df, monthly_df)
-    
+
+    # --- New: Top Summary Cards ---
+    top_col1, top_col2, top_col3, top_col4 = st.columns(4)
+    with top_col1:
+        st.metric("Avg Health Score", f"{stats['avg_health_score']:.1f}")
+    with top_col2:
+        st.metric("Avg Income", f"${stats['avg_income']:,.0f}")
+    with top_col3:
+        st.metric("Avg Savings", f"${stats['avg_savings']:,.0f}")
+    with top_col4:
+        st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- New: Personalized Insights Panel ---
+    st.subheader("🤖 Personalized Insights")
+    # Use the first user as an example for demo; in a real app, use logged-in user
+    sample_user = users_df.iloc[0].to_dict() if not users_df.empty else {}
+    budget_recs = recommendations_engine.get_budget_recommendations(sample_user) if sample_user else []
+    debt_recs = recommendations_engine.get_debt_recommendations(sample_user) if sample_user else []
+    for rec in (budget_recs[:1] + debt_recs[:1]):
+        color = "#fde68a" if rec['status'] in ["warning", "moderate"] else ("#fca5a5" if rec['status'] == "critical" else ("#bbf7d0" if rec['status'] in ["good", "excellent"] else "#bae6fd"))
+        st.markdown(f"<div style='background-color: {color}; padding: 10px; border-radius: 8px; margin-bottom: 8px;'><b>{rec['category']}:</b> {rec['message']}<br><i>{rec['suggestion']}</i></div>", unsafe_allow_html=True)
+
+    # --- New: Recent Alerts & Notifications Panel ---
+    st.subheader("🔔 Recent Alerts & Notifications")
+    # Example: Show users with low savings rate or high DTI
+    alert_users = users_df[(users_df['monthly_savings'] / users_df['monthly_income'] < 0.1) | (users_df['monthly_expenses'] / users_df['monthly_income'] > 0.8)]
+    if not alert_users.empty:
+        for _, row in alert_users.head(3).iterrows():
+            st.warning(f"User {row['user_id']}: Low savings rate or high expenses detected.")
+    else:
+        st.success("No critical alerts at this time.")
+
+    # --- Existing Dashboard Layout ---
     # Metric cards with Gauge
     col1, col2 = st.columns([1.5, 2.5])
-    
     with col1:
         with st.container(border=True):
             st.plotly_chart(visualizer.create_gauge_chart(stats['avg_health_score'], "System Health Index"), use_container_width=True)
             st.markdown(f"<div style='text-align: center; color: #64748b;'>Average score across <b>{stats['total_users']:,}</b> users</div>", unsafe_allow_html=True)
-
     with col2:
         sub_col1, sub_col2 = st.columns(2)
-        
         # Prepare sparkline data
         monthly_income_trend = monthly_df.groupby('month')['income'].mean().tolist()
         monthly_savings_trend = monthly_df.groupby('month')['savings'].mean().tolist()
-        
         with sub_col1:
             with st.container(border=False):
-                st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", 
-                          help="The average gross monthly income across all user segments.")
+                st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", help="The average gross monthly income across all user segments.")
                 st.plotly_chart(visualizer.create_sparkline(monthly_income_trend, color="#10b981"), use_container_width=True)
-            
             with st.container(border=False):
-                st.metric("Avg Monthly Savings", f"${stats['avg_savings']:,.0f}", 
-                          help="The average amount users are saving each month after expenses.")
+                st.metric("Avg Monthly Savings", f"${stats['avg_savings']:,.0f}", help="The average amount users are saving each month after expenses.")
                 st.plotly_chart(visualizer.create_sparkline(monthly_savings_trend, color="#3b82f6"), use_container_width=True)
-                
         with sub_col2:
-            st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}", 
-                      help="Average FICO score of the analyzed population.")
-            st.metric("Data Sample Size", f"{stats['total_monthly_records']:,} mos", 
-                      help="Total historical transaction months processed.")
-    
+            st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}", help="Average FICO score of the analyzed population.")
+            st.metric("Data Sample Size", f"{stats['total_monthly_records']:,} mos", help="Total historical transaction months processed.")
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     # Tabs for different views
     tab1, tab2, tab3, tab4 = st.tabs(["📊 Key Performance Indicators", "🔍 Behavioral Patterns", "💸 Subscription Audit", "📋 Dataset Snapshot"])
     
