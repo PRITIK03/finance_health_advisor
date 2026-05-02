@@ -67,5 +67,30 @@ A professional-grade financial advisory dashboard built with **Streamlit** and *
 - **Actionable Roadmap**: Step-by-step success paths for financial goals.
 - **Clean Aesthetic**: Focused on readability, high-contrast text, and modern card layouts.
 
+## ✨ Frontend Enhancements (v2.0)
+- **🎨 Animated Gradient Header**: Dynamic purple/blue gradient with CSS animation
+- **🖱️ Card Hover Effects**: Smooth 2px lift with shadow on hover transitions
+- **🔘 Button Animations**: Scale transform on hover with box shadow feedback
+- **📊 Styled Metric Cards**: Gradient backgrounds with left accent borders
+- **🎯 Custom Progress Bars**: Gradient fills with rounded corners
+- **📱 Responsive Design**: Mobile-friendly layout with adaptive containers
+
+## 📸 Feature Overview
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| 📊 Dashboard Overview | Financial executive summary with KPIs | ✅ Active |
+| 🚨 Stress Test | Financial shock simulation | ✅ Active |
+| 🚀 Wealth Projection | Compound interest calculator | ✅ Active |
+| 👥 Comparison Mode | Side-by-side user analysis | ✅ Active |
+| 👥 User Segmentation | K-Means clustering profiles | ✅ Active |
+| 🎯 Risk Prediction | Random Forest classification | ✅ Active |
+| 📈 Forecasting | Savings prediction & trends | ✅ Active |
+| 🚨 Anomaly Detection | Isolation Forest outliers | ✅ Active |
+| 💡 Recommendations | AI-powered financial advice | ✅ Active |
+| 🎯 Goal Planner | Milestone tracking with projections | ✅ Active |
+| 🔥 FIRE Tracker | Financial independence calculator | ✅ **NEW** |
+| 💸 Debt Optimizer | Avalanche vs Snowball comparison | ✅ **NEW** |
+
 ---
 *Built for professional financial intelligence and actionable strategy.*
