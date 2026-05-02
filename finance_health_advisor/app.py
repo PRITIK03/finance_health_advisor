@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import sys
 import os
+from datetime import datetime, timedelta
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -114,6 +115,74 @@ with st.sidebar:
          "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
         label_visibility="collapsed"
     )
+    
+    # Custom CSS for enhanced frontend
+    st.markdown("""
+    <style>
+    /* Animated gradient header */
+    .main-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        animation: gradientShift 8s ease infinite;
+        background-size: 200% 200%;
+    }
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Card hover effects */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        transition: all 0.3s ease;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    
+    /* Button styling */
+    .stButton button {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .stButton button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Metric cards */
+    [data-testid="stMetric"] {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px 8px 0 0;
+        transition: all 0.2s ease;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: rgba(102, 126, 234, 0.1);
+    }
+    
+    /* Progress bars */
+    .stProgress > div > div {
+        border-radius: 10px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* Slider styling */
+    .stSlider > div > div > div {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
     # Sidebar Info
     st.markdown("---")
@@ -1224,5 +1293,509 @@ elif page == "🎯 Goal Planner":
         users_df['user_id'].unique(),
         format_func=lambda x: f"User {x}"
     )
-    
     user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+    
+    monthly_data = monthly_df[monthly_df['user_id'] == selected_user_id]
+    avg_savings = monthly_data['savings'].mean() if not monthly_data.empty else 0
+    
+    with st.container(border=True):
+        st.markdown("<p class='card-title'>Goal Parameters</p>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            target_amount = st.number_input("Target Amount ($)", min_value=1000, value=int(user_row['monthly_income'] * 6), step=1000)
+        with col2:
+            monthly_contribution = st.number_input("Monthly Contribution ($)", min_value=0, value=int(avg_savings), step=100)
+        with col3:
+            expected_return = st.slider("Expected Annual Return (%)", 0.0, 15.0, 7.0, 0.5) / 100
+    
+    # Calculate projection
+    current_savings = float(user_row['monthly_savings'] * 12) if user_row['monthly_savings'] > 0 else float(user_row['monthly_income'] * 0.1)
+    months_to_goal = 0
+    temp_amount = current_savings
+    
+    if monthly_contribution > 0 or current_savings > 0:
+        monthly_rate = (1 + expected_return) ** (1/12) - 1
+        while temp_amount < target_amount and months_to_goal < 600:
+            temp_amount = (temp_amount + monthly_contribution) * (1 + monthly_rate)
+            months_to_goal += 1
+    
+    years_to_goal = months_to_goal / 12
+    goal_date = pd.Timestamp.now() + pd.DateOffset(months=months_to_goal)
+    progress_pct = min(100, (current_savings / target_amount) * 100) if target_amount > 0 else 0
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1.5, 2, 1.5])
+    
+    with col1:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>Progress Overview</p>", unsafe_allow_html=True)
+            st.metric("Current Savings", f"${current_savings:,.0f}")
+            st.metric("Target Amount", f"${target_amount:,.0f}")
+            st.metric("Progress", f"{progress_pct:.1f}%")
+            st.progress(progress_pct / 100, text=f"{progress_pct:.1f}%")
+    
+    with col2:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>Timeline Projection</p>", unsafe_allow_html=True)
+            if months_to_goal >= 600:
+                st.error("Goal may be unreachable with current contribution rate")
+            else:
+                st.metric("Months to Goal", f"{months_to_goal}")
+                st.metric("Years to Goal", f"{years_to_goal:.1f}")
+                st.metric("Estimated Achievement", goal_date.strftime("%B %Y"))
+                st.success(f"At ${monthly_contribution:,.0f}/month, you'll reach your goal by {goal_date.strftime('%B %Y')}!")
+    
+    with col3:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>Optimization Tips</p>", unsafe_allow_html=True)
+            if monthly_contribution < target_amount * 0.02:
+                st.warning("Consider increasing monthly contributions")
+            if expected_return < 0.05:
+                st.info("Higher returns could accelerate your timeline")
+            if progress_pct < 10:
+                st.info("Starting is the hardest part - keep going!")
+            st.caption("Adjust parameters to see real-time updates")
+
+# ============ FIRE TRACKER ============
+elif page == "🔥 FIRE Tracker":
+    st.header("Financial Independence, Retire Early (FIRE) Tracker")
+    
+    st.info("Calculate your path to financial independence and see when you can retire early based on your current savings rate and investments.")
+    
+    selected_user_id = st.selectbox(
+        "Select User Profile for FIRE Analysis",
+        users_df['user_id'].unique(),
+        format_func=lambda x: f"User {x}"
+    )
+    user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+    
+    # FIRE Settings
+    with st.container(border=True):
+        st.markdown("<p class='card-title'>FIRE Parameters</p>", unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            safe_withdrawal = st.slider("Safe Withdrawal Rate (%)", 2.0, 6.0, 4.0, 0.1) / 100
+        with col2:
+            expected_return = st.slider("Expected Return (%)", 3.0, 12.0, 7.0, 0.5) / 100
+        with col3:
+            inflation_rate = st.slider("Inflation Rate (%)", 0.0, 5.0, 3.0, 0.1) / 100
+        with col4:
+            current_investments = st.number_input(
+                "Current Investments ($)", 
+                min_value=0, 
+                value=int(user_row.get('monthly_investments', 0) * 24),
+                step=1000
+            )
+    
+    # Calculate FIRE metrics
+    annual_expenses = float(user_row['monthly_expenses']) * 12
+    monthly_contribution = float(user_row['monthly_savings']) + float(user_row['monthly_investments'])
+    annual_contribution = monthly_contribution * 12
+    real_return = expected_return - inflation_rate
+    
+    # Recalculate years to FIRE
+    years_to_fire = 0
+    temp_wealth = current_investments
+    fire_number = annual_expenses / safe_withdrawal if safe_withdrawal > 0 else float('inf')
+    
+    if annual_contribution > 0 and real_return > 0:
+        while temp_wealth < fire_number and years_to_fire < 100:
+            temp_wealth = (temp_wealth + annual_contribution) * (1 + real_return)
+            years_to_fire += 1
+    elif annual_contribution > 0:
+        years_to_fire = (fire_number - current_investments) / annual_contribution if annual_contribution > 0 else float('inf')
+    
+    lean_fire = annual_expenses * 0.7 / safe_withdrawal if safe_withdrawal > 0 else 0
+    fat_fire = annual_expenses * 1.5 / safe_withdrawal if safe_withdrawal > 0 else 0
+    progress_pct = min(100, (current_investments / fire_number) * 100) if fire_number > 0 else 0
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("FIRE Number", f"${fire_number:,.0f}", help="Amount needed to retire with current expenses")
+    with col2:
+        st.metric("Years to FIRE", f"{years_to_fire}", help="Estimated years until financial independence")
+    with col3:
+        st.metric("Current Progress", f"{progress_pct:.1f}%", help="Percentage of FIRE goal achieved")
+    with col4:
+        st.metric("Monthly Investment", f"${monthly_contribution:,.0f}", help="Current monthly savings + investments")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["FIRE Analysis", "Growth Projection", "FIRE Scenarios"])
+    
+    with tab1:
+        col1, col2 = st.columns([1.5, 2.5])
+        
+        with col1:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Your FIRE Targets</p>", unsafe_allow_html=True)
+                
+                lean_progress = min(100, (current_investments / lean_fire) * 100) if lean_fire > 0 else 0
+                st.markdown(f"**Lean FIRE:** ${lean_fire:,.0f} (70% of expenses)")
+                st.progress(lean_progress / 100, text=f"{lean_progress:.1f}%")
+                
+                st.markdown(f"**Regular FIRE:** ${fire_number:,.0f} (100% of expenses)")
+                st.progress(progress_pct / 100, text=f"{progress_pct:.1f}%")
+                
+                fat_progress = min(100, (current_investments / fat_fire) * 100) if fat_fire > 0 else 0
+                st.markdown(f"**Fat FIRE:** ${fat_fire:,.0f} (150% of expenses)")
+                st.progress(fat_progress / 100, text=f"{fat_progress:.1f}%")
+                
+                st.markdown("---")
+                st.markdown(f"**Annual Expenses:** ${annual_expenses:,.0f}")
+                st.markdown(f"**Safe Withdrawal:** {safe_withdrawal*100:.1f}% = ${annual_expenses:,.0f}/year")
+            
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>FIRE Readiness Score</p>", unsafe_allow_html=True)
+                st.plotly_chart(
+                    visualizer.create_gauge_chart(min(100, progress_pct * 2), "FIRE Readiness", target=100),
+                    use_container_width=True
+                )
+        
+        with col2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>FIRE Milestone Timeline</p>", unsafe_allow_html=True)
+                
+                milestones = []
+                milestone_names = ["25%", "50%", "75%", "90%", "100% (FIRE)"]
+                milestone_values = [fire_number * p for p in [0.25, 0.5, 0.75, 0.9, 1.0]]
+                
+                for name, target in zip(milestone_names, milestone_values):
+                    if current_investments >= target:
+                        milestones.append({"Milestone": name, "Status": "Achieved", "Target": f"${target:,.0f}"})
+                    else:
+                        remaining = target - current_investments
+                        if annual_contribution > 0 and real_return > 0:
+                            years_remaining = 0
+                            temp = current_investments
+                            while temp < target and years_remaining < 100:
+                                temp = (temp + annual_contribution) * (1 + real_return)
+                                years_remaining += 1
+                            milestones.append({"Milestone": name, "Status": f"{years_remaining} years", "Target": f"${target:,.0f}"})
+                        else:
+                            milestones.append({"Milestone": name, "Status": "Not achievable", "Target": f"${target:,.0f}"})
+                
+                st.dataframe(pd.DataFrame(milestones), use_container_width=True, hide_index=True)
+                
+                st.markdown("---")
+                st.markdown("<p class='card-title'>Savings Rate Impact</p>", unsafe_allow_html=True)
+                
+                current_savings_rate = (user_row['monthly_savings'] / user_row['monthly_income'] * 100) if user_row['monthly_income'] > 0 else 0
+                
+                if current_savings_rate < 20:
+                    st.warning(f"Your savings rate is {current_savings_rate:.1f}%. Increasing to 50%+ could accelerate FIRE.")
+                elif current_savings_rate < 50:
+                    st.info(f"Good progress! At {current_savings_rate:.1f}% savings rate, you're on the path to FIRE.")
+                else:
+                    st.success(f"Excellent! Your {current_savings_rate:.1f}% savings rate puts you on the fast track to FIRE!")
+    
+    with tab2:
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Net Worth Projection to FIRE</p>", unsafe_allow_html=True)
+                
+                years = list(range(min(years_to_fire + 6, 51)))
+                wealth_values = []
+                temp = current_investments
+                for _ in years:
+                    wealth_values.append(temp)
+                    temp = (temp + annual_contribution) * (1 + real_return)
+                
+                fig = go.Figure()
+                
+                fig.add_trace(go.Scatter(
+                    x=years, y=wealth_values,
+                    mode='lines+markers',
+                    name='Projected Net Worth',
+                    line=dict(color='#10b981', width=3),
+                    marker=dict(size=6)
+                ))
+                
+                fig.add_hline(y=fire_number, line_dash="dash", line_color="#ef4444", 
+                             annotation_text="FIRE Number", annotation_position="top right")
+                
+                fig.add_hline(y=lean_fire, line_dash="dot", line_color="#f59e0b",
+                             annotation_text="Lean FIRE", annotation_position="bottom right")
+                
+                fig.update_layout(
+                    template="plotly_white",
+                    xaxis_title="Years from Now",
+                    yaxis_title="Net Worth ($)",
+                    hovermode="x unified",
+                    margin=dict(t=30, b=30, l=30, r=30),
+                    showlegend=True,
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Contribution Analysis</p>", unsafe_allow_html=True)
+                
+                st.metric("Current Investments", f"${current_investments:,.0f}")
+                st.metric("Annual Contribution", f"${annual_contribution:,.0f}")
+                st.metric("Real Return Rate", f"{real_return*100:.1f}%")
+                
+                st.markdown("---")
+                st.markdown("**Quick Adjustments:**")
+                
+                extra_100 = 100 * 12
+                temp_with_extra = current_investments
+                years_with_extra = 0
+                while temp_with_extra < fire_number and years_with_extra < 100:
+                    temp_with_extra = (temp_with_extra + annual_contribution + extra_100) * (1 + real_return)
+                    years_with_extra += 1
+                
+                time_saved = years_to_fire - years_with_extra
+                if time_saved > 0:
+                    st.success(f"+${extra_100/12:.0f}/month saves {time_saved} years!")
+    
+    with tab3:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>Compare FIRE Scenarios</p>", unsafe_allow_html=True)
+            
+            scenarios = []
+            for withdrawal in [0.03, 0.04, 0.05]:
+                for return_rate in [0.05, 0.07, 0.09]:
+                    real = return_rate - inflation_rate
+                    fire_num = annual_expenses / withdrawal if withdrawal > 0 else float('inf')
+                    
+                    years = 0
+                    temp = current_investments
+                    annual = annual_contribution
+                    while temp < fire_num and years < 100:
+                        temp = (temp + annual) * (1 + real)
+                        years += 1
+                    
+                    scenarios.append({
+                        "Withdrawal Rate": f"{withdrawal*100:.0f}%",
+                        "Return Rate": f"{return_rate*100:.0f}%",
+                        "FIRE Number": f"${fire_num:,.0f}",
+                        "Years to FIRE": years if years < 100 else "100+",
+                        "Monthly Income": f"${fire_num * withdrawal / 12:,.0f}"
+                    })
+            
+            st.dataframe(pd.DataFrame(scenarios), use_container_width=True, hide_index=True)
+            
+            st.info("Key Insight: Lower withdrawal rates require more savings but provide more safety. Higher returns accelerate your timeline but come with more volatility.")
+
+# ============ DEBT OPTIMIZER ============
+elif page == "💸 Debt Optimizer":
+    st.header("Smart Debt Optimizer")
+    
+    st.info("Compare debt payoff strategies and find the optimal approach to eliminate your debt faster while saving on interest payments.")
+    
+    selected_user_id = st.selectbox(
+        "Select User Profile for Debt Analysis",
+        users_df['user_id'].unique(),
+        format_func=lambda x: f"User {x}"
+    )
+    user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+    
+    default_debts = [
+        {"name": "Credit Card", "balance": float(user_row['total_debt']) * 0.4 if user_row['total_debt'] > 0 else 5000, 
+         "interest_rate": 19.99, "min_payment": 150},
+        {"name": "Car Loan", "balance": float(user_row['total_debt']) * 0.35 if user_row['total_debt'] > 0 else 8000, 
+         "interest_rate": 5.99, "min_payment": 300},
+        {"name": "Student Loan", "balance": float(user_row['total_debt']) * 0.25 if user_row['total_debt'] > 0 else 6000, 
+         "interest_rate": 4.5, "min_payment": 200},
+    ]
+    
+    with st.container(border=True):
+        st.markdown("<p class='card-title'>Debt Configuration</p>", unsafe_allow_html=True)
+        
+        debts = []
+        for i, default in enumerate(default_debts):
+            with st.expander(f"Debt {i+1}: {default['name']}", expanded=i==0):
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    name = st.text_input(f"Name {i}", value=default['name'], key=f"debt_name_{i}")
+                with col2:
+                    balance = st.number_input(f"Balance ${i}", min_value=0.0, value=float(default['balance']), step=100.0, key=f"debt_bal_{i}")
+                with col3:
+                    rate = st.number_input(f"APR % {i}", min_value=0.0, max_value=50.0, value=float(default['interest_rate']), step=0.1, key=f"debt_rate_{i}")
+                with col4:
+                    min_pay = st.number_input(f"Min Pay ${i}", min_value=0.0, value=float(default['min_payment']), step=10.0, key=f"debt_min_{i}")
+                
+                if balance > 0:
+                    debts.append({"name": name, "balance": balance, "interest_rate": rate, "min_payment": min_pay})
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            extra_payment = st.number_input("Extra Monthly Payment ($)", min_value=0.0, value=float(user_row['monthly_savings'] * 0.5), step=50.0,
+                                           help="Additional amount to put toward debt payoff each month")
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            optimize_button = st.button("Calculate Optimal Strategy", use_container_width=True, type="primary")
+    
+    if debts and optimize_button:
+        results = calculate_debt_paydown(debts, extra_payment)
+        
+        avalanche = results['avalanche']
+        snowball = results['snowball']
+        
+        total_debt = sum(d['balance'] for d in debts)
+        min_monthly = sum(d['min_payment'] for d in debts)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Debt", f"${total_debt:,.0f}")
+        with col2:
+            st.metric("Min. Monthly Payment", f"${min_monthly:,.0f}")
+        with col3:
+            st.metric("Extra Payment", f"${extra_payment:,.0f}")
+        with col4:
+            st.metric("Total Monthly", f"${min_monthly + extra_payment:,.0f}")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        st.subheader("Strategy Comparison")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Avalanche Method (Highest Interest First)</p>", unsafe_allow_html=True)
+                
+                col_a1, col_a2 = st.columns(2)
+                with col_a1:
+                    st.metric("Payoff Time", f"{avalanche['months']} months")
+                    st.metric("Total Interest", f"${avalanche['total_interest']:,.0f}")
+                with col_a2:
+                    st.metric("Years to Debt-Free", f"{avalanche['months']/12:.1f}")
+                    if avalanche['months'] > 0:
+                        avg_monthly = (total_debt + avalanche['total_interest']) / avalanche['months']
+                        st.metric("Avg Monthly Cost", f"${avg_monthly:,.0f}")
+                
+                st.markdown("---")
+                st.markdown("**Priority Order:** Pay minimums on all, put extra toward highest interest debt first.")
+                st.success("Best for: Saving the most money on interest")
+        
+        with col2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Snowball Method (Smallest Balance First)</p>", unsafe_allow_html=True)
+                
+                col_s1, col_s2 = st.columns(2)
+                with col_s1:
+                    st.metric("Payoff Time", f"{snowball['months']} months")
+                    st.metric("Total Interest", f"${snowball['total_interest']:,.0f}")
+                with col_s2:
+                    st.metric("Years to Debt-Free", f"{snowball['months']/12:.1f}")
+                    if snowball['months'] > 0:
+                        avg_monthly = (total_debt + snowball['total_interest']) / snowball['months']
+                        st.metric("Avg Monthly Cost", f"${avg_monthly:,.0f}")
+                
+                st.markdown("---")
+                st.markdown("**Priority Order:** Pay minimums on all, put extra toward smallest balance first.")
+                st.info("Best for: Quick wins and motivation")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        interest_saved = snowball['total_interest'] - avalanche['total_interest']
+        months_diff = snowball['months'] - avalanche['months']
+        
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>AI Recommendation</p>", unsafe_allow_html=True)
+            
+            if interest_saved > 100:
+                st.success(f"Recommended: Avalanche Method - You'll save ${interest_saved:,.0f} in interest compared to Snowball!")
+            elif months_diff > 3:
+                st.info(f"Either method works, but Avalanche saves ${interest_saved:,.0f} and pays off {months_diff} months faster.")
+            else:
+                st.success("Both strategies are similar for your debt profile. Choose based on what motivates you more!")
+            
+            st.markdown("---")
+            
+            debt_free_date = datetime.now() + timedelta(days=avalanche['months'] * 30)
+            st.markdown(f"Estimated Debt-Free Date: {debt_free_date.strftime('%B %Y')} (using Avalanche)")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        tab1, tab2 = st.tabs(["Balance Over Time", "Debt Breakdown"])
+        
+        with tab1:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Avalanche Payoff Timeline</p>", unsafe_allow_html=True)
+                    
+                    if avalanche['history']:
+                        months = list(range(len(avalanche['history'])))
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatter(
+                            x=months, y=avalanche['history'],
+                            mode='lines', fill='tozeroy',
+                            name='Remaining Balance',
+                            line=dict(color='#3b82f6', width=2),
+                            fillcolor='rgba(59, 130, 246, 0.2)'
+                        ))
+                        fig.update_layout(
+                            template="plotly_white",
+                            xaxis_title="Months",
+                            yaxis_title="Remaining Balance ($)",
+                            margin=dict(t=20, b=20, l=20, r=20),
+                            paper_bgcolor='rgba(0,0,0,0)',
+                            plot_bgcolor='rgba(0,0,0,0)'
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                with st.container(border=True):
+                    st.markdown("<p class='card-title'>Snowball Payoff Timeline</p>", unsafe_allow_html=True)
+                    
+                    if snowball['history']:
+                        months = list(range(len(snowball['history'])))
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatter(
+                            x=months, y=snowball['history'],
+                            mode='lines', fill='tozeroy',
+                            name='Remaining Balance',
+                            line=dict(color='#10b981', width=2),
+                            fillcolor='rgba(16, 185, 129, 0.2)'
+                        ))
+                        fig.update_layout(
+                            template="plotly_white",
+                            xaxis_title="Months",
+                            yaxis_title="Remaining Balance ($)",
+                            margin=dict(t=20, b=20, l=20, r=20),
+                            paper_bgcolor='rgba(0,0,0,0)',
+                            plot_bgcolor='rgba(0,0,0,0)'
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+        
+        with tab2:
+            with st.container(border=True):
+                st.markdown("<p class='card-title'>Your Debt Portfolio</p>", unsafe_allow_html=True)
+                
+                debt_df = pd.DataFrame(debts)
+                debt_df['Annual Interest'] = debt_df['balance'] * (debt_df['interest_rate'] / 100)
+                debt_df['Cost per Month'] = debt_df['Annual Interest'] / 12
+                
+                st.dataframe(
+                    debt_df[['name', 'balance', 'interest_rate', 'min_payment', 'Cost per Month']]
+                    .style.format({
+                        'balance': '${:,.0f}',
+                        'interest_rate': '{:.2f}%',
+                        'min_payment': '${:,.0f}',
+                        'Cost per Month': '${:,.0f}'
+                    }),
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+                total_annual_interest = debt_df['Annual Interest'].sum()
+                st.markdown(f"**Total Annual Interest Cost:** ${total_annual_interest:,.0f} (${total_annual_interest/12:,.0f}/month)")
+    
+    else:
+        st.info("Configure your debts above and click 'Calculate Optimal Strategy' to see your personalized payoff plan.")
