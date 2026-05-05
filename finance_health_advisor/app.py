@@ -260,11 +260,11 @@ col1_pag, col2_pag = st.sidebar.columns(2)
 with col1_pag:
     if st.button("Previous Page", use_container_width=True, disabled=(st.session_state['page_number'] == 1)):
         st.session_state['page_number'] -= 1
-        st.experimental_rerun()
+        st.rerun()
 with col2_pag:
     if st.button("Next Page", use_container_width=True, disabled=(st.session_state['page_number'] == total_pages)):
         st.session_state['page_number'] += 1
-        st.experimental_rerun()
+        st.rerun()
 
 offset = (st.session_state['page_number'] - 1) * st.session_state['page_size']
 limit = st.session_state['page_size']
@@ -332,7 +332,7 @@ if page == "🎯 Goal Planner":
                     st.success("🎉 Goal achieved!")
                 if st.button(f"Remove Goal: {goal['name']}", key=f'remove_goal_{idx}'):
                     st.session_state['goals'].pop(idx)
-                    st.experimental_rerun()
+                    st.rerun()
     else:
         st.info("No goals set yet. Use 'Add New Goal' to get started!")
 
@@ -371,7 +371,7 @@ elif page == "📊 Dashboard Overview":
     # --- New: Recent Alerts & Notifications Panel ---
     st.subheader("🔔 Recent Alerts & Notifications")
     # Example: Show users with low savings rate or high DTI
-    alert_users = users_df[(users_df['monthly_savings'] / users_df['monthly_income'] < 0.1) | (users_df['monthly_expenses'] / users_df['monthly_income'] > 0.8)]
+    alert_users = users_df[(users_df['monthly_savings'] / users_df['monthly_income'].replace(0, np.nan) < 0.1) | (users_df['monthly_expenses'] / users_df['monthly_income'].replace(0, np.nan) > 0.8)]
     if not alert_users.empty:
         for _, row in alert_users.head(3).iterrows():
             st.warning(f"User {row['user_id']}: Low savings rate or high expenses detected.")
@@ -1309,7 +1309,8 @@ elif page == "🎯 Goal Planner":
             expected_return = st.slider("Expected Annual Return (%)", 0.0, 15.0, 7.0, 0.5) / 100
     
     # Calculate projection
-    current_savings = float(user_row['monthly_savings'] * 12) if user_row['monthly_savings'] > 0 else float(user_row['monthly_income'] * 0.1)
+    monthly_income_val = float(user_row['monthly_income']) if user_row['monthly_income'] > 0 else 1
+    current_savings = float(user_row['monthly_savings'] * 12) if user_row['monthly_savings'] > 0 else float(monthly_income_val * 0.1)
     months_to_goal = 0
     temp_amount = current_savings
     
