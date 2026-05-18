@@ -1,4 +1,9 @@
 import streamlit as st
+import html
+
+def safe_html(text):
+    return html.escape(str(text))
+
 st.set_page_config(
     page_title="Finance Health Advisor",
     page_icon="💰",
@@ -322,7 +327,8 @@ if page == "🎯 Goal Planner":
     if st.session_state.get('goals'):
         for idx, goal in enumerate(st.session_state['goals']):
             with st.container(border=True):
-                st.markdown(f"### 🎯 {goal['name']} <span style='font-size: 1rem; color: #64748b;'>({goal['type']})</span>", unsafe_allow_html=True)
+                 st.subheader(f"🎯 {goal['name']}")
+                 st.caption(f"({goal['type']})")
                 st.write(f"**Target:** ${goal['target']:,} by {goal['target_date']}")
                 progress = st.slider(f"Progress for {goal['name']}", 0, goal['target'], goal.get('progress', 0), key=f'goal_progress_{idx}')
                 goal['progress'] = progress
@@ -354,9 +360,9 @@ elif page == "📊 Dashboard Overview":
     with top_col3:
         st.metric("Avg Savings", f"${stats['avg_savings']:,.0f}")
     with top_col4:
-        st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}")
+     st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+     st.write("")
 
     # --- New: Personalized Insights Panel ---
     st.subheader("🤖 Personalized Insights")
