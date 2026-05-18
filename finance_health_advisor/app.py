@@ -1,8 +1,4 @@
 import streamlit as st
-import html
-
-def safe_html(text):
-    return html.escape(str(text))
 
 st.set_page_config(
     page_title="Finance Health Advisor",
