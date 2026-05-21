@@ -29,6 +29,7 @@ from preprocessing import FinancialDataPreprocessor, prepare_classification_data
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
+from pages.dashboard import render_dashboard
 
 
 TOTAL_USERS = 10000 # Define total number of users for synthetic data
@@ -236,152 +237,8 @@ with st.sidebar:
     st.subheader("Export Center")
 
 # ============ DASHBOARD OVERVIEW ============
-elif page == "📊 Dashboard Overview":
-
-    st.header("Financial Executive Summary")
-    stats = generate_summary_statistics(users_df, monthly_df)
-
-    # --- New: Top Summary Cards ---
-    top_col1, top_col2, top_col3, top_col4 = st.columns(4)
-    with top_col1:
-        st.metric("Avg Health Score", f"{stats['avg_health_score']:.1f}")
-    with top_col2:
-        st.metric("Avg Income", f"${stats['avg_income']:,.0f}")
-    with top_col3:
-        st.metric("Avg Savings", f"${stats['avg_savings']:,.0f}")
-    with top_col4:
-     st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}")
-
-     st.write("")
-
-    # --- New: Personalized Insights Panel ---
-    st.subheader("🤖 Personalized Insights")
-    # Use the first user as an example for demo; in a real app, use logged-in user
-    sample_user = users_df.iloc[0].to_dict() if not users_df.empty else {}
-    budget_recs = recommendations_engine.get_budget_recommendations(sample_user) if sample_user else []
-    debt_recs = recommendations_engine.get_debt_recommendations(sample_user) if sample_user else []
-    for rec in (budget_recs[:1] + debt_recs[:1]):
-        color = "#fde68a" if rec['status'] in ["warning", "moderate"] else ("#fca5a5" if rec['status'] == "critical" else ("#bbf7d0" if rec['status'] in ["good", "excellent"] else "#bae6fd"))
-        st.markdown(f"<div style='background-color: {color}; padding: 10px; border-radius: 8px; margin-bottom: 8px;'><b>{rec['category']}:</b> {rec['message']}<br><i>{rec['suggestion']}</i></div>", unsafe_allow_html=True)
-
-    # --- New: Recent Alerts & Notifications Panel ---
-    st.subheader("🔔 Recent Alerts & Notifications")
-    # Example: Show users with low savings rate or high DTI
-    alert_users = users_df[(users_df['monthly_savings'] / users_df['monthly_income'].replace(0, np.nan) < 0.1) | (users_df['monthly_expenses'] / users_df['monthly_income'].replace(0, np.nan) > 0.8)]
-    if not alert_users.empty:
-        for _, row in alert_users.head(3).iterrows():
-            st.warning(f"User {row['user_id']}: Low savings rate or high expenses detected.")
-    else:
-        st.success("No critical alerts at this time.")
-
-    # --- Existing Dashboard Layout ---
-    # Metric cards with Gauge
-    col1, col2 = st.columns([1.5, 2.5])
-    with col1:
-        with st.container(border=True):
-            st.plotly_chart(visualizer.create_gauge_chart(stats['avg_health_score'], "System Health Index"), use_container_width=True)
-            st.markdown(f"<div style='text-align: center; color: #64748b;'>Average score across <b>{stats['total_users']:,}</b> users</div>", unsafe_allow_html=True)
-    with col2:
-        sub_col1, sub_col2 = st.columns(2)
-        # Prepare sparkline data
-        monthly_income_trend = monthly_df.groupby('month')['income'].mean().tolist()
-        monthly_savings_trend = monthly_df.groupby('month')['savings'].mean().tolist()
-        with sub_col1:
-            with st.container(border=False):
-                st.metric("Avg Monthly Income", f"${stats['avg_income']:,.0f}", help="The average gross monthly income across all user segments.")
-                st.plotly_chart(visualizer.create_sparkline(monthly_income_trend, color="#10b981"), use_container_width=True)
-            with st.container(border=False):
-                st.metric("Avg Monthly Savings", f"${stats['avg_savings']:,.0f}", help="The average amount users are saving each month after expenses.")
-                st.plotly_chart(visualizer.create_sparkline(monthly_savings_trend, color="#3b82f6"), use_container_width=True)
-        with sub_col2:
-            st.metric("Avg Credit Score", f"{stats['avg_credit_score']:.0f}", help="Average FICO score of the analyzed population.")
-            st.metric("Data Sample Size", f"{stats['total_monthly_records']:,} mos", help="Total historical transaction months processed.")
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Key Performance Indicators", "🔍 Behavioral Patterns", "💸 Subscription Audit", "📋 Dataset Snapshot"])
-    
-    with tab1:
-        col1, col2 = st.columns(2)
-        with col1:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>📊 Risk & Health Distribution</p>", unsafe_allow_html=True)
-                st.plotly_chart(visualizer.create_risk_analysis_plot(), use_container_width=True)
-        
-        with col2:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>🍕 Spending Categories</p>", unsafe_allow_html=True)
-                st.plotly_chart(visualizer.create_spending_breakdown_chart(), use_container_width=True)
-        
-        with st.container(border=True):
-            st.markdown("<p class='card-title'>📈 Monthly Financial Trends</p>", unsafe_allow_html=True)
-            st.plotly_chart(visualizer.create_time_series_plot(), use_container_width=True)
-            
-    with tab2:
-        col1, col2 = st.columns(2)
-        with col1:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>🔍 Income vs Expenses</p>", unsafe_allow_html=True)
-                st.plotly_chart(visualizer.create_income_expense_scatter(), use_container_width=True)
-        
-        with col2:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>💼 Employment Analysis</p>", unsafe_allow_html=True)
-                st.plotly_chart(visualizer.create_employment_analysis(), use_container_width=True)
-                
-        with st.container(border=True):
-            st.markdown("<p class='card-title'>🌡️ Feature Correlation</p>", unsafe_allow_html=True)
-            st.plotly_chart(visualizer.create_correlation_heatmap(), use_container_width=True)
-    
-    with tab3:
-        st.info("💡 **Subscription Leakage Detection:** AI analyzes your recurring costs to identify low-usage services.")
-        selected_user_id = st.selectbox("Select User for Audit", users_df['user_id'].unique(), key="sub_audit_user")
-        audit_df, audit_summary = calculate_subscription_audit(monthly_df, selected_user_id)
-
-        metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-        with metric_col1:
-            st.metric("Active Services", audit_summary['services_count'])
-        with metric_col2:
-            st.metric("Monthly Cost", f"${audit_summary['estimated_monthly_total']:,.0f}")
-        with metric_col3:
-            st.metric("Potential Savings", f"${audit_summary['potential_monthly_savings']:,.0f}/mo")
-        with metric_col4:
-            st.metric("High-Risk Leaks", audit_summary['high_risk_count'])
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            with st.container(border=True):
-                st.plotly_chart(visualizer.create_subscription_audit_chart(audit_df), use_container_width=True)
-        with col2:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>🚨 Priority Actions</p>", unsafe_allow_html=True)
-                risky_items = audit_df[audit_df['usage'].isin(['Low', 'Medium'])]
-                if risky_items.empty:
-                    st.success("No major subscription leaks detected.")
-                else:
-                    for _, row in risky_items.iterrows():
-                        if row['usage'] == 'Low':
-                            st.error(f"{row['name']}: {row['recommendation']}")
-                        else:
-                            st.warning(f"{row['name']}: {row['recommendation']}")
-
-                st.markdown("---")
-                st.write(f"**Annual Savings Potential:** `${audit_summary['potential_annual_savings']:,.0f}`")
-                st.write(f"**Annual Subscription Spend:** `${audit_summary['estimated_annual_total']:,.0f}`")
-
-        with st.container(border=True):
-            st.markdown("<p class='card-title'>📋 Subscription Review Table</p>", unsafe_allow_html=True)
-            st.dataframe(
-                audit_df[['name', 'cost', 'annual_cost', 'usage', 'recommendation', 'potential_monthly_savings']],
-                use_container_width=True
-            )
-            
-    with tab4:
-        with st.container(border=True):
-            st.markdown("<p class='card-title'>📋 Recent Financial Snapshot</p>", unsafe_allow_html=True)
-            st.dataframe(users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score']].head(20), use_container_width=True)
+if page == "📊 Dashboard Overview":
+    render_dashboard(users_df, monthly_df, recommendations_engine, visualizer)
 
 # ============ STRESS TEST ============
 elif page == "🚨 Stress Test":
@@ -1696,3 +1553,143 @@ elif page == "💸 Debt Optimizer":
     
     else:
         st.info("Configure your debts above and click 'Calculate Optimal Strategy' to see your personalized payoff plan.")
+
+# ============ DATA VISUALIZATION DASHBOARD ============
+elif page == "📈 Data Visualization Dashboard":
+    st.header("📈 Comprehensive Data Visualization Dashboard")
+    st.info("Interactive visualizations for deep financial data exploration.")
+    
+    tabs = st.tabs(["Distributions", "Correlations", "Trends", "Employment", "Anomalies"])
+    
+    with tabs[0]:
+        st.plotly_chart(visualizer.create_distribution_plots()['distribution_plots'], use_container_width=True)
+    
+    with tabs[1]:
+        st.plotly_chart(visualizer.create_correlation_heatmap(), use_container_width=True)
+    
+    with tabs[2]:
+        st.plotly_chart(visualizer.create_time_series_plot(), use_container_width=True)
+    
+    with tabs[3]:
+        st.plotly_chart(visualizer.create_employment_analysis(), use_container_width=True)
+    
+    with tabs[4]:
+        st.plotly_chart(visualizer.create_anomaly_analysis_plot(), use_container_width=True)
+
+# ============ FINANCIAL TIPS & EDUCATION ============
+elif page == "📚 Financial Tips & Education":
+    st.header("📚 Financial Literacy & Education Center")
+    st.info("Evidence-based financial education modules powered by behavioral insights.")
+    
+    with st.expander("💰 The 50/30/20 Budget Rule", expanded=True):
+        st.markdown("""
+        **Needs (50%)** — Housing, utilities, groceries, minimum debt payments, insurance.
+        **Wants (30%)** — Dining out, entertainment, subscriptions, hobbies.
+        **Savings & Debt (20%)** — Emergency fund, retirement, extra debt payments.
+        """)
+    
+    with st.expander("🚨 Emergency Fund Essentials"):
+        st.markdown("""
+        Aim for **3-6 months** of essential expenses in a high-yield savings account.
+        Start with a $1,000 starter fund if you're in debt, then build to full coverage.
+        """)
+    
+    with st.expander("🔥 FIRE Movement Basics"):
+        st.markdown("""
+        **Financial Independence, Retire Early** — Save 50%+ of income to retire decades early.
+        Rule of thumb: Multiply annual expenses by 25 (4% safe withdrawal rate).
+        """)
+
+# ============ DOCUMENT UPLOAD & STORAGE ============
+elif page == "🗂️ Document Upload & Storage":
+    st.header("🗂️ Secure Document Vault (Demo)")
+    st.warning("⚠️ This is a demo. In production, use encrypted storage and proper auth.")
+    
+    uploaded_files = st.file_uploader(
+        "Upload financial documents (PDF, CSV, images)",
+        type=["pdf", "csv", "png", "jpg", "jpeg"],
+        accept_multiple_files=True
+    )
+    
+    if uploaded_files:
+        st.success(f"Uploaded {len(uploaded_files)} file(s) (demo only — not persisted).")
+        for f in uploaded_files:
+            st.write(f"• {f.name} ({f.size} bytes)")
+
+# ============ EXPENSE CATEGORIZATION ============
+elif page == "💸 Expense Categorization":
+    st.header("💸 AI Expense Categorization")
+    st.info("Upload transactions or view auto-categorized spending from the synthetic dataset.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Category Breakdown (Sample)")
+        spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 'Entertainment', 'Shopping', 'Education', 'Subscriptions', 'Insurance', 'Miscellaneous']
+        avg_spend = monthly_df[spending_cols].mean().sort_values(ascending=False)
+        st.dataframe(avg_spend.reset_index().rename(columns={'index': 'Category', 0: 'Avg Monthly $'}))
+    
+    with col2:
+        st.plotly_chart(visualizer.create_spending_breakdown_chart(), use_container_width=True)
+
+# ============ PREDICTIVE ANALYTICS ============
+elif page == "🔮 Predictive Analytics":
+    st.header("🔮 Predictive Analytics Suite")
+    st.info("Advanced forecasting and scenario modeling (Monte Carlo + ML).")
+    
+    st.subheader("Savings Forecast (Gradient Boosting)")
+    st.metric("R² Score", f"{results['forecasting']['test_metrics']['r2']:.3f}")
+    st.metric("RMSE", f"${results['forecasting']['test_metrics']['rmse']:.0f}")
+    st.plotly_chart(visualizer.create_time_series_plot(), use_container_width=True)
+
+# ============ ALERTS & NOTIFICATIONS ============
+elif page == "🔔 Alerts & Notifications":
+    st.header("🔔 Smart Alerts & Notifications")
+    
+    st.subheader("Critical Alerts (Demo)")
+    alert_users = users_df[
+        (users_df['monthly_savings'] / users_df['monthly_income'].replace(0, np.nan) < 0.05) |
+        (users_df['monthly_expenses'] / users_df['monthly_income'].replace(0, np.nan) > 0.85)
+    ]
+    
+    if not alert_users.empty:
+        for _, row in alert_users.head(5).iterrows():
+            st.error(f"User {row['user_id']}: Very low savings rate or dangerously high expense ratio!")
+    else:
+        st.success("No critical alerts in current page.")
+
+# ============ PEER BENCHMARKING ============
+elif page == "👥 Peer Benchmarking":
+    st.header("👥 Peer Benchmarking")
+    st.info("Compare yourself to similar financial profiles using KNN.")
+    
+    user_id = st.selectbox("Select User", users_df['user_id'].unique())
+    user_row = users_df[users_df['user_id'] == user_id].iloc[0]
+    
+    st.plotly_chart(visualizer.create_gauge_chart(user_row['financial_health_score'], f"User {user_id} Health"), use_container_width=True)
+    st.caption("Peer comparison radar coming from KNN model (see models.py).")
+
+# ============ SCENARIO SIMULATOR ============
+elif page == "🔮 Scenario Simulator":
+    st.header("🔮 What-If Scenario Simulator")
+    st.info("Run custom Monte Carlo simulations on your financial future.")
+    
+    st.write("**Coming soon:** Full Monte Carlo wealth simulator with adjustable volatility, sequence-of-returns risk, and custom life events.")
+
+# ============ DATA EXPLORER ============
+elif page == "🔍 Data Explorer":
+    st.header("🔍 Raw Data Explorer")
+    
+    tab1, tab2 = st.tabs(["Users", "Monthly Transactions"])
+    
+    with tab1:
+        st.dataframe(users_df, use_container_width=True, height=500)
+        st.download_button("Download Users CSV", users_df.to_csv(index=False), "users.csv", "text/csv")
+    
+    with tab2:
+        st.dataframe(monthly_df, use_container_width=True, height=500)
+        st.download_button("Download Monthly CSV", monthly_df.to_csv(index=False), "monthly.csv", "text/csv")
+
+# ============ SAFETY NET ============
+else:
+    st.warning("🚧 This section is under active development.")
+    st.info("Please select a different module from the sidebar.")

@@ -47,3 +47,17 @@ Thumbs.db
 *.csv
 *.parquet
 *.h5
+
+# Finance Health Advisor specific
+finance_health_advisor/__pycache__/
+finance_health_advisor/*.csv
+finance_health_advisor/*.parquet
+finance_health_advisor/streamlit/
+finance_health_advisor/.streamlit/secrets.toml
+finance_health_advisor/outputs/
+finance_health_advisor/*.log
+finance_health_advisor/.env
+finance_health_advisor/.env.local
+
+# Jupyter
+finance_health_advisor/.ipynb_checkpoints/
