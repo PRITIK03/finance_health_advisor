@@ -12,6 +12,7 @@ from data_generator import calculate_financial_health_score
 def render_what_if_simulator(users_df, monthly_df):
     st.header("🛠️ What-If Budget Simulator")
     st.info("Adjust your spending categories and instantly see the impact on your financial health score, savings, and risk level.")
+    st.caption("Note: Data is limited to the currently loaded page (pagination). Select different pages in the sidebar for more users.")
 
     # User selection
     selected_user_id = st.selectbox(
@@ -21,13 +22,25 @@ def render_what_if_simulator(users_df, monthly_df):
     )
     user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0].copy()
 
-    # Get average monthly spending breakdown for this user
+    # Get average monthly spending breakdown for this user (handle pagination / missing data)
     user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id]
     spending_cols = ['Housing', 'Transportation', 'Food', 'Healthcare', 
                      'Entertainment', 'Shopping', 'Education', 'Subscriptions',
                      'Insurance', 'Miscellaneous']
 
-    current_spending = user_monthly[spending_cols].mean().to_dict()
+    if not user_monthly.empty:
+        current_spending = user_monthly[spending_cols].mean().to_dict()
+    else:
+        # Fallback: distribute user's total expenses using realistic default ratios
+        total_exp = float(user_row['monthly_expenses'])
+        default_ratios = {
+            'Housing': 0.35, 'Transportation': 0.15, 'Food': 0.12,
+            'Healthcare': 0.08, 'Entertainment': 0.07, 'Shopping': 0.06,
+            'Education': 0.04, 'Subscriptions': 0.03, 'Insurance': 0.05,
+            'Miscellaneous': 0.05
+        }
+        current_spending = {k: round(total_exp * v, 2) for k, v in default_ratios.items()}
+
     current_expenses = float(user_row['monthly_expenses'])
     current_savings = float(user_row['monthly_savings'])
     current_health = float(user_row['financial_health_score'])

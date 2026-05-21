@@ -2,6 +2,8 @@
 
 A professional-grade financial advisory dashboard built with **Streamlit** and **Machine Learning**. This application provides a comprehensive "Wealth Intelligence" platform, offering actionable insights into financial health, risk prediction, and strategic planning.
 
+**New in latest release**: What-If Budget Simulator, Tax Optimization Calculator, and full Monte Carlo stochastic projections.
+
 ## 🚀 Key Features
 
 ### 📊 Intelligence Dashboard
@@ -13,14 +15,15 @@ A professional-grade financial advisory dashboard built with **Streamlit** and *
 - **🏆 Gamification**: Achievement badges like "Debt-Free Dynamo" and "FIRE Starter".
 
 ### 💸 Strategic Planning Tools
-- **🔥 FIRE Tracker**: Now with **Inflation-Adjusted** roadmaps and safe withdrawal simulations.
-- **🚨 Emergency Fund Stress Test**: Simulate "Job Loss" or "Medical Crisis" to test your survival buffer.
-- **💸 Debt Optimizer**: Compare **Avalanche** vs. **Snowball** strategies.
-- **🎯 Goal Planner**: Interactive roadmap for major milestones.
-- **🚀 Wealth Projection**: Monte Carlo simulations with **Real Return (Inflation-Adjusted)** logic.
+- **🛠️ What-If Simulator** (NEW): Live budget adjustments with real-time impact on your Financial Health Score.
+- **💼 Tax Optimizer** (NEW): Interactive planner to maximize 401(k), HSA, and IRA contributions with estimated tax savings.
+- **📉 Monte Carlo Simulator** (NEW): Full stochastic projections with volatility — see 10th/50th/90th percentile outcomes.
+- **🔥 FIRE Tracker**: Inflation-adjusted roadmaps and safe withdrawal simulations.
+- **💸 Debt Optimizer**: Compare Avalanche vs Snowball payoff strategies.
+- **🎯 Goal Planner**: Milestone tracking with projections.
+- **🚀 Wealth Projection**: Compound interest calculator (use Monte Carlo for realistic ranges).
 
 ### 🔍 Advanced Analytics
-- **🔮 Interactive Simulator**: Real-time "What-If" budget sliding to see instant health score impacts.
 - **👥 Comparison Mode**: Side-by-side user profiling and comparative radar analysis.
 - **👥 Peer Benchmarking**: Compare against similar neighbors (KNN).
 - **🚨 Anomaly Detection**: Flag unusual spending patterns.
@@ -60,9 +63,24 @@ A professional-grade financial advisory dashboard built with **Streamlit** and *
    ```
 
 3. **Run the application**:
-   ```bash
-   streamlit run app.py
-   ```
+    ```bash
+    streamlit run app.py
+    ```
+
+### Quick Examples of New Tools (v3.0)
+
+Once the app is running, try these powerful new modules from the sidebar:
+
+- **🛠️ What-If Simulator**  
+  Select a user → Drag the spending category sliders (e.g., reduce Subscriptions by 30%) → Watch your Health Score and projected savings update live.
+
+- **💼 Tax Optimizer**  
+  Pick a profile → Adjust your planned 401(k)/HSA/IRA contributions → Instantly see your estimated tax savings opportunity and remaining contribution room.
+
+- **📉 Monte Carlo Simulator**  
+  Enter starting capital and monthly contribution → Set expected return + volatility → Run 1000+ simulations → View the full distribution of possible outcomes (including worst-case 10th percentile).
+
+These tools work entirely offline with the built-in synthetic dataset.
 
 ## 🌙 UI Highlights
 - **Dark Mode Support**: Seamlessly toggle between light and dark themes.

@@ -4,8 +4,6 @@ Interactive tax-advantaged contribution planner with estimated savings.
 """
 import streamlit as st
 
-from recommendations import RecommendationsEngine
-
 
 def render_tax_optimizer(users_df, monthly_df, recommendations_engine):
     st.header("💼 Tax Optimization Calculator")

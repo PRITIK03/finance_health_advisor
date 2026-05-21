@@ -31,6 +31,7 @@ def run_monte_carlo(initial, monthly, annual_return, volatility, years, n_sims=1
 def render_monte_carlo_simulator(users_df, monthly_df):
     st.header("📉 Monte Carlo Wealth Simulator")
     st.info("Run thousands of possible futures with market volatility. See the range of outcomes instead of a single straight line.")
+    st.caption("Note: Uses currently loaded users from the active data page.")
 
     col1, col2 = st.columns(2)
     with col1:
