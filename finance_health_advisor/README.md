@@ -94,6 +94,9 @@ A professional-grade financial advisory dashboard built with **Streamlit** and *
 | 🎯 Goal Planner | Milestone tracking with projections | ✅ Active |
 | 🔥 FIRE Tracker | Financial independence calculator | ✅ **NEW** |
 | 💸 Debt Optimizer | Avalanche vs Snowball comparison | ✅ **NEW** |
+| 🛠️ What-If Simulator | Live budget adjustments with real-time health score impact | ✅ **NEW** |
+| 💼 Tax Optimizer | Interactive tax-advantaged account planner & savings estimator | ✅ **NEW** |
+| 📉 Monte Carlo Simulator | Stochastic wealth projections with volatility and outcome distributions | ✅ **NEW** |
 
 ---
 *Built for professional financial intelligence and actionable strategy.*

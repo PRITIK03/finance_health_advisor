@@ -30,6 +30,9 @@ from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
 from pages.dashboard import render_dashboard
+from pages.what_if_simulator import render_what_if_simulator
+from pages.tax_optimizer import render_tax_optimizer
+from pages.monte_carlo_simulator import render_monte_carlo_simulator
 
 
 TOTAL_USERS = 10000 # Define total number of users for synthetic data
@@ -114,7 +117,7 @@ with st.sidebar:
     page = st.radio(
         "Go to section:",
         ["📊 Dashboard Overview", "📈 Data Visualization Dashboard", "📚 Financial Tips & Education", "🗂️ Document Upload & Storage", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🔍 Data Explorer"],
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🛠️ What-If Simulator", "💼 Tax Optimizer", "📉 Monte Carlo Simulator", "🔍 Data Explorer"],
         label_visibility="collapsed"
     )
     
@@ -1688,6 +1691,18 @@ elif page == "🔍 Data Explorer":
     with tab2:
         st.dataframe(monthly_df, use_container_width=True, height=500)
         st.download_button("Download Monthly CSV", monthly_df.to_csv(index=False), "monthly.csv", "text/csv")
+
+# ============ WHAT-IF SIMULATOR ============
+elif page == "🛠️ What-If Simulator":
+    render_what_if_simulator(users_df, monthly_df)
+
+# ============ TAX OPTIMIZER ============
+elif page == "💼 Tax Optimizer":
+    render_tax_optimizer(users_df, monthly_df, recommendations_engine)
+
+# ============ MONTE CARLO SIMULATOR ============
+elif page == "📉 Monte Carlo Simulator":
+    render_monte_carlo_simulator(users_df, monthly_df)
 
 # ============ SAFETY NET ============
 else:
