@@ -227,21 +227,13 @@ with st.sidebar:
     st.markdown(f"""
     <div class='sidebar-text'>
     <b>Health Index:</b> <span class='highlight'>{avg_health:.1f} ({health_status})</span><br>
-    # <b>Model Status:</b> <span style='color: #10b981; font-weight: bold;'>Active</span><br>
-    # <b>User Base:</b> <span class='highlight'>{len(users_df):,}</span>
-    # </div>
-    # """, unsafe_allow_html=True)
+    <b>Model Status:</b> <span style='color: #10b981; font-weight: bold;'>Active</span><br>
+    <b>User Base:</b> <span class='highlight'>{len(users_df):,}</span>
+    </div>
+    """, unsafe_allow_html=True)
     # Export Data Button
     st.markdown("---")
     st.subheader("Export Center")
-    # summary_data = users_df[['user_id', 'age', 'employment_type', 'monthly_income', 'monthly_expenses', 'financial_health_score', 'risk_label']].to_csv(index=False)
-    # st.download_button(
-    #     label="📥 Export Analysis (CSV)",
-    #     data=summary_data,
-    #     file_name="financial_health_summary.csv",
-    #     mime="text/csv",
-    #     use_container_width=True
-    # )
 
 # Initialize session state for pagination
 if 'page_number' not in st.session_state:
