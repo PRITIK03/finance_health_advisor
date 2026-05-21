@@ -35,13 +35,16 @@ A professional-grade financial advisory dashboard built with **Streamlit** and *
 - **Styling**: Inter Font family, Dark Mode toggle, and responsive layout.
 
 ## 📂 Project Structure
-
-- `app.py`: Main Streamlit orchestrator and UI implementation.
+ 
+- `app.py`: Main Streamlit orchestrator (lightweight entrypoint).
+- `pages/`: Modular UI sections (dashboard.py and future page modules for better maintainability).
 - `models.py`: Machine Learning pipelines and model training logic.
 - `preprocessing.py`: Data engineering, financial ratios, and simulation backends.
 - `visualizations.py`: Centralized module for all professional-grade charts and gauges.
 - `recommendations.py`: Rule-based and AI-driven recommendation engine.
 - `data_generator.py`: Synthetic data engine for large-scale financial simulation (10,000+ users).
+
+**Note:** All external CDN dependencies for UI icons have been removed for full offline / air-gapped compatibility.
 
 ## 🚀 Getting Started
 

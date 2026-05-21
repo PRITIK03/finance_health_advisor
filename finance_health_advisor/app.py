@@ -25,7 +25,7 @@ from datetime import datetime, timedelta
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data_generator import generate_full_dataset, calculate_financial_health_score
-from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown, calculate_emergency_fund_stress_test, calculate_subscription_audit, calculate_financial_stress_test, calculate_wealth_projection
+from preprocessing import FinancialDataPreprocessor, prepare_classification_data, calculate_fire_metrics, calculate_debt_paydown, calculate_emergency_fund_stress_test, calculate_financial_stress_test, calculate_wealth_projection
 from models import train_all_models
 from visualizations import FinancialVisualizer, generate_summary_statistics
 from recommendations import RecommendationsEngine
@@ -51,7 +51,7 @@ def train_models(users_df, monthly_df):
 # Header
 col1_header, col2_header = st.columns([1, 5])
 with col1_header:
-    st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=80)
+    st.markdown("<div style='font-size: 4rem; text-align: center;'>💰</div>", unsafe_allow_html=True)
 with col2_header:
     st.title("Financial Health Advisor")
     st.markdown("<p style='font-size: 1.1rem; color: #64748b; margin-top: -15px;'>AI-Powered Financial Insights & Behavioral Analysis</p>", unsafe_allow_html=True)
@@ -86,7 +86,7 @@ recommendations_engine = RecommendationsEngine(users_df, monthly_df)
 # Sidebar
 with st.sidebar:
     st.markdown("<div style='text-align: center; padding-bottom: 20px;'>", unsafe_allow_html=True)
-    st.image("https://cdn-icons-png.flaticon.com/512/2845/2845812.png", width=80)
+    st.markdown("<div style='font-size: 3.5rem; text-align: center;'>💰</div>", unsafe_allow_html=True)
     st.markdown("<h2 style='margin-top: 10px; color: #0f172a;'>Menu</h2>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
