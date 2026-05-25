@@ -119,7 +119,7 @@ with st.sidebar:
     page = st.radio(
         "Go to section:",
         ["📊 Dashboard Overview", "📈 Data Visualization Dashboard", "📚 Financial Tips & Education", "🗂️ Document Upload & Storage", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🛠️ What-If Simulator", "💼 Tax Optimizer", "📉 Monte Carlo Simulator", "� Subscription Manager", "💰 Net Worth Tracker", "� Data Explorer"],
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🛠️ What-If Simulator", "💼 Tax Optimizer", "📉 Monte Carlo Simulator", "📱 Subscription Manager", "💰 Net Worth Tracker", "🔍 Data Explorer"],
         label_visibility="collapsed"
     )
     
