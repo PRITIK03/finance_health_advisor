@@ -33,6 +33,8 @@ from pages.dashboard import render_dashboard
 from pages.what_if_simulator import render_what_if_simulator
 from pages.tax_optimizer import render_tax_optimizer
 from pages.monte_carlo_simulator import render_monte_carlo_simulator
+from pages.subscription_manager import render_subscription_manager
+from pages.net_worth_tracker import render_net_worth_tracker
 
 
 TOTAL_USERS = 10000 # Define total number of users for synthetic data
@@ -117,7 +119,7 @@ with st.sidebar:
     page = st.radio(
         "Go to section:",
         ["📊 Dashboard Overview", "📈 Data Visualization Dashboard", "📚 Financial Tips & Education", "🗂️ Document Upload & Storage", "🚨 Stress Test", "👥 Comparison Mode", "👥 User Segmentation", "🎯 Risk Prediction", 
-         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🛠️ What-If Simulator", "💼 Tax Optimizer", "📉 Monte Carlo Simulator", "🔍 Data Explorer"],
+         "📈 Forecasting", "🚨 Anomaly Detection", "💡 Recommendations", "💸 Expense Categorization", "🎯 Goal Planner", "🔮 Predictive Analytics", "🔔 Alerts & Notifications", "🚀 Wealth Projection", "🔥 FIRE Tracker", "💸 Debt Optimizer", "👥 Peer Benchmarking", "🔮 Scenario Simulator", "🛠️ What-If Simulator", "💼 Tax Optimizer", "📉 Monte Carlo Simulator", "� Subscription Manager", "💰 Net Worth Tracker", "� Data Explorer"],
         label_visibility="collapsed"
     )
     
@@ -1703,6 +1705,14 @@ elif page == "💼 Tax Optimizer":
 # ============ MONTE CARLO SIMULATOR ============
 elif page == "📉 Monte Carlo Simulator":
     render_monte_carlo_simulator(users_df, monthly_df)
+
+# ============ SUBSCRIPTION MANAGER ============
+elif page == "📱 Subscription Manager":
+    render_subscription_manager(users_df, monthly_df, visualizer)
+
+# ============ NET WORTH TRACKER ============
+elif page == "💰 Net Worth Tracker":
+    render_net_worth_tracker(users_df, monthly_df, visualizer)
 
 # ============ SAFETY NET ============
 else:

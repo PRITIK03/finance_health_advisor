@@ -115,6 +115,8 @@ These tools work entirely offline with the built-in synthetic dataset.
 | 🛠️ What-If Simulator | Live budget adjustments with real-time health score impact | ✅ **NEW** |
 | 💼 Tax Optimizer | Interactive tax-advantaged account planner & savings estimator | ✅ **NEW** |
 | 📉 Monte Carlo Simulator | Stochastic wealth projections with volatility and outcome distributions | ✅ **NEW** |
+| 📱 Subscription Manager | Track and optimize recurring subscription costs with AI-powered insights | ✅ **NEW** |
+| 💰 Net Worth Tracker | Track net worth over time with detailed asset and liability breakdowns | ✅ **NEW** |
 
 ---
 *Built for professional financial intelligence and actionable strategy.*
