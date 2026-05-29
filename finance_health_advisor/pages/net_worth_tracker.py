@@ -40,16 +40,8 @@ def render_net_worth_tracker(users_df, monthly_df, visualizer):
     net_worth_growth = current_net_worth - initial_net_worth
     net_worth_growth_pct = (net_worth_growth / initial_net_worth * 100) if initial_net_worth > 0 else 0
     
-    # Top metrics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Current Net Worth", f"${current_net_worth:,.0f}")
-    with col2:
-        st.metric("Total Assets", f"${current_assets:,.0f}")
-    with col3:
-        st.metric("Total Liabilities", f"${current_liabilities:,.0f}")
-    with col4:
-        st.metric("12-Month Growth", f"${net_worth_growth:,.0f}", f"{net_worth_growth_pct:+.1f}%")
+    # Display top metrics
+    _render_top_metrics(current_net_worth, current_assets, current_liabilities, net_worth_growth, net_worth_growth_pct)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -57,105 +49,16 @@ def render_net_worth_tracker(users_df, monthly_df, visualizer):
     tab1, tab2, tab3, tab4 = st.tabs(["📈 Trend Analysis", "🏦 Asset Breakdown", "💳 Liability Breakdown", "🎯 Goals & Projections"])
     
     with tab1:
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>📈 Net Worth Over Time</p>", unsafe_allow_html=True)
-                
-                fig = go.Figure()
-                
-                fig.add_trace(go.Scatter(
-                    x=net_worth_history['month'],
-                    y=net_worth_history['net_worth'],
-                    mode='lines+markers',
-                    name='Net Worth',
-                    line=dict(color='#10b981', width=3),
-                    fill='tozeroy',
-                    fillcolor='rgba(16, 185, 129, 0.1)'
-                ))
-                
-                fig.add_trace(go.Scatter(
-                    x=net_worth_history['month'],
-                    y=net_worth_history['total_assets'],
-                    mode='lines',
-                    name='Total Assets',
-                    line=dict(color='#3b82f6', width=2, dash='dash')
-                ))
-                
-                fig.add_trace(go.Scatter(
-                    x=net_worth_history['month'],
-                    y=net_worth_history['total_liabilities'],
-                    mode='lines',
-                    name='Total Liabilities',
-                    line=dict(color='#ef4444', width=2, dash='dash')
-                ))
-                
-                fig.update_layout(
-                    template="plotly_white",
-                    xaxis_title="Month",
-                    yaxis_title="Amount ($)",
-                    hovermode="x unified",
-                    margin=dict(t=30, b=30, l=30, r=30),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)'
-                )
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            with st.container(border=True):
-                st.markdown("<p class='card-title'>📊 Growth Summary</p>", unsafe_allow_html=True)
-                
-                # Monthly growth rates
-                monthly_growth = net_worth_history['net_worth'].pct_change() * 100
-                avg_monthly_growth = monthly_growth.mean()
-                
-                st.metric("Avg Monthly Growth", f"{avg_monthly_growth:+.2f}%")
-                st.metric("Best Month", f"${net_worth_history['net_worth'].max():,.0f}")
-                st.metric("Lowest Month", f"${net_worth_history['net_worth'].min():,.0f}")
-                
-                # Growth gauge
-                growth_score = min(100, max(0, net_worth_growth_pct + 50))  # Normalize to 0-100
-                st.plotly_chart(
-                    visualizer.create_gauge_chart(
-                        growth_score,
-                        "Growth Momentum",
-                        target=75
-                    ),
-                    use_container_width=True
-                )
-        
-        with st.container(border=True):
-            st.markdown("<p class='card-title'>📊 Monthly Change Breakdown</p>", unsafe_allow_html=True)
-            
-            fig = go.Figure()
-            
-            fig.add_trace(go.Bar(
-                x=net_worth_history['month'],
-                y=net_worth_history['assets_change'],
-                name='Asset Change',
-                marker_color='#10b981'
-            ))
-            
-            fig.add_trace(go.Bar(
-                x=net_worth_history['month'],
-                y=-net_worth_history['liabilities_change'],
-                name='Liability Change',
-                marker_color='#ef4444'
-            ))
-            
-            fig.update_layout(
-                template="plotly_white",
-                xaxis_title="Month",
-                yaxis_title="Change ($)",
-                hovermode="x unified",
-                margin=dict(t=30, b=30, l=30, r=30),
-                barmode='relative',
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        _render_trend_analysis_tab(net_worth_history, visualizer, net_worth_growth_pct)
+    
+    with tab2:
+        _render_asset_breakdown_tab(net_worth_history, current_assets, visualizer)
+    
+    with tab3:
+        _render_liability_breakdown_tab(net_worth_history, current_liabilities, user_row, visualizer)
+    
+    with tab4:
+        _render_goals_projections_tab(net_worth_history, current_net_worth, user_row, visualizer)
     
     with tab2:
         col1, col2 = st.columns([1, 1])
