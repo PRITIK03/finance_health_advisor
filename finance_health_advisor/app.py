@@ -1,17 +1,4 @@
 import streamlit as st
-
-st.set_page_config(
-    page_title="Finance Health Advisor",
-    page_icon="💰",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-"""
-Streamlit Web Application
-Interactive dashboard for Financial Health Advisor
-"""
-
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -20,6 +7,13 @@ from plotly.subplots import make_subplots
 import sys
 import os
 from datetime import datetime, timedelta
+
+st.set_page_config(
+    page_title="Finance Health Advisor",
+    page_icon="💰",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

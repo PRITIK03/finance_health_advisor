@@ -1,128 +1,146 @@
-def _create_pie_chart(values, names, title, hole=0.6, color_sequence=None):
-    """Create a pie chart with consistent styling."""
-    if color_sequence is None:
-        color_sequence = px.colors.qualitative.Set3
-    
-    fig = px.pie(
-        values=values,
-        names=names,
-        hole=hole,
-        color_discrete_sequence=color_sequence
+"""
+Net Worth Tracker page module
+"""
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+
+
+def render_net_worth_tracker(users_df, monthly_df, visualizer):
+    """Render the Net Worth Tracker page."""
+    st.header("💰 Net Worth Tracker")
+    st.info("Track your financial progress over time with detailed asset and liability breakdowns.")
+
+    # User selector
+    selected_user_id = st.selectbox(
+        "Select User Profile",
+        users_df['user_id'].unique(),
+        format_func=lambda x: f"User {x}"
     )
-    fig.update_layout(
-        template="plotly_white",
-        margin=dict(t=10, b=10, l=10, r=10),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
+
+    user_row = users_df[users_df['user_id'] == selected_user_id].iloc[0]
+    user_monthly = monthly_df[monthly_df['user_id'] == selected_user_id].sort_values('month')
+
+    if user_monthly.empty:
+        st.warning("No monthly data available for this user.")
+        return
+
+    # Calculate net worth components
+    user_monthly['assets'] = (
+        user_monthly['Savings'] +
+        user_monthly['Investments'] +
+        user_monthly['Retirement']
     )
-    return fig
+    user_monthly['liabilities'] = user_monthly['total_debt']
+    user_monthly['net_worth'] = user_monthly['assets'] - user_monthly['liabilities']
 
+    # Summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Current Net Worth", f"${user_monthly['net_worth'].iloc[-1]:,.0f}")
+    with col2:
+        st.metric("Total Assets", f"${user_monthly['assets'].iloc[-1]:,.0f}")
+    with col3:
+        st.metric("Total Liabilities", f"${user_monthly['liabilities'].iloc[-1]:,.0f}")
+    with col4:
+        net_worth_change = user_monthly['net_worth'].iloc[-1] - user_monthly['net_worth'].iloc[0]
+        st.metric("Net Worth Change", f"${net_worth_change:+,.0f}")
 
-def _create_multi_line_chart(x_data, y_data_dict, title, x_title, y_title, height=None):
-    """Create a line chart with multiple series."""
-    fig = go.Figure()
-    
-    for name, (y_values, line_props) in y_data_dict.items():
-        fig.add_trace(go.Scatter(
-            x=x_data,
-            y=y_values,
-            mode='lines+markers' if 'markers' in line_props else 'lines',
-            name=name,
-            line=line_props.get('line', dict(width=2)),
-            fill=line_props.get('fill'),
-            fillcolor=line_props.get('fillcolor')
-        ))
-    
-    fig.update_layout(
-        template="plotly_white",
-        title=title,
-        xaxis_title=x_title,
-        yaxis_title=y_title,
-        hovermode="x unified",
-        margin=dict(t=30, b=30, l=30, r=30),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
-    
-    if height:
-        fig.update_layout(height=height)
-        
-    return fig
+    st.markdown("<br>", unsafe_allow_html=True)
 
+    tab1, tab2, tab3 = st.tabs(["📈 Net Worth Trend", "📊 Asset Breakdown", "💳 Liability Analysis"])
 
-def _create_multi_bar_chart(x_data, y_data_dict, title, x_title, y_title):
-    """Create a bar chart with multiple series."""
-    fig = go.Figure()
-    
-    for name, (y_values, marker_props) in y_data_dict.items():
-        fig.add_trace(go.Bar(
-            x=x_data,
-            y=y_values,
-            name=name,
-            marker_color=marker_props.get('color')
-        ))
-    
-    fig.update_layout(
-        template="plotly_white",
-        title=title,
-        xaxis_title=x_title,
-        yaxis_title=y_title,
-        hovermode="x unified",
-        margin=dict(t=30, b=30, l=30, r=30),
-        barmode='relative',
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
-    
-    return fig
+    with tab1:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>📈 Net Worth Over Time</p>", unsafe_allow_html=True)
 
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=user_monthly['month'],
+                y=user_monthly['net_worth'],
+                mode='lines+markers',
+                name='Net Worth',
+                line=dict(color='#3b82f6', width=3),
+                marker=dict(size=6)
+            ))
+            fig.add_trace(go.Scatter(
+                x=user_monthly['month'],
+                y=user_monthly['assets'],
+                mode='lines',
+                name='Assets',
+                line=dict(color='#10b981', width=2, dash='dash')
+            ))
+            fig.add_trace(go.Scatter(
+                x=user_monthly['month'],
+                y=-user_monthly['liabilities'],
+                mode='lines',
+                name='Liabilities',
+                line=dict(color='#ef4444', width=2, dash='dash')
+            ))
 
-def _create_projection_chart(historical_months, historical_values, projection_months, projection_values, 
-                           goal_lines=None, title="Projection Chart"):
-    """Create a projection chart with historical data, projection, and goal lines."""
-    fig = go.Figure()
-    
-    # Historical data
-    fig.add_trace(go.Scatter(
-        x=historical_months,
-        y=historical_values,
-        mode='lines+markers',
-        name='Historical',
-        line=dict(color='#10b981', width=3)
-    ))
-    
-    # Projection
-    fig.add_trace(go.Scatter(
-        x=projection_months,
-        y=projection_values,
-        mode='lines',
-        name='Projection',
-        line=dict(color='#3b82f6', width=3, dash='dash')
-    ))
-    
-    # Goal lines
-    if goal_lines:
-        for goal_value, goal_dash, goal_color, goal_annotation, goal_position in goal_lines:
-            fig.add_hline(
-                y=goal_value,
-                line_dash=goal_dash,
-                line_color=goal_color,
-                annotation_text=goal_annotation,
-                annotation_position=goal_position
+            fig.update_layout(
+                template="plotly_white",
+                xaxis_title="Month",
+                yaxis_title="Amount ($)",
+                hovermode="x unified",
+                margin=dict(t=30, b=30, l=30, r=30),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
-    
-    fig.update_layout(
-        template="plotly_white",
-        title=title,
-        xaxis_title="Month",
-        yaxis_title="Net Worth ($)",
-        hovermode="x unified",
-        margin=dict(t=30, b=30, l=30, r=30),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
-    
-    return fig
+            st.plotly_chart(fig, use_container_width=True)
+
+    with tab2:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>📊 Asset Composition</p>", unsafe_allow_html=True)
+
+            latest_assets = user_monthly[['Savings', 'Investments', 'Retirement']].iloc[-1]
+            if latest_assets.sum() > 0:
+                fig = px.pie(
+                    values=latest_assets.values,
+                    names=latest_assets.index,
+                    hole=0.6,
+                    color_discrete_sequence=px.colors.qualitative.Set1
+                )
+                fig.update_layout(
+                    template="plotly_white",
+                    margin=dict(t=10, b=10, l=10, r=10),
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No asset data available for this period.")
+
+    with tab3:
+        with st.container(border=True):
+            st.markdown("<p class='card-title'>💳 Liability Trend</p>", unsafe_allow_html=True)
+
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=user_monthly['month'],
+                y=user_monthly['liabilities'],
+                name='Liabilities',
+                marker_color='#ef4444'
+            ))
+            fig.update_layout(
+                template="plotly_white",
+                xaxis_title="Month",
+                yaxis_title="Liability Amount ($)",
+                margin=dict(t=30, b=30, l=30, r=30),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown("<p class='card-title'>📋 Monthly Snapshot</p>", unsafe_allow_html=True)
+        st.dataframe(
+            user_monthly[['month', 'assets', 'liabilities', 'net_worth']].reset_index(drop=True),
+            use_container_width=True,
+            hide_index=True
+        )
