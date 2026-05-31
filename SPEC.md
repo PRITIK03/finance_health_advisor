@@ -40,7 +40,16 @@ finance-health-advisor/
 ├── visualizations.py   # Charts and plots
 ├── app.py              # Streamlit dashboard
 ├── requirements.txt    # Dependencies
-└── README.md           # Documentation
+├── README.md           # Documentation
+└── pages/              # Modular UI pages
+    ├── __init__.py     # Package exports
+    ├── charts.py       # Shared chart utilities
+    ├── dashboard.py    # Dashboard page
+    ├── what_if_simulator.py
+    ├── tax_optimizer.py
+    ├── monte_carlo_simulator.py
+    ├── subscription_manager.py
+    └── net_worth_tracker.py
 ```
 
 ## Data Schema
