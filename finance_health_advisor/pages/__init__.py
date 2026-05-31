@@ -2,11 +2,11 @@
 Pages package for Finance Health Advisor
 Each file contains render functions for a specific section.
 """
-from .subscription_manager import (
-    _create_pie_chart,
-    _create_multi_line_chart,
-    _create_multi_bar_chart,
-    _create_projection_chart,
+from .charts import (
+    create_pie_chart,
+    create_multi_line_chart,
+    create_multi_bar_chart,
+    create_projection_chart,
 )
 from .dashboard import render_dashboard
 from .what_if_simulator import render_what_if_simulator
@@ -22,8 +22,8 @@ __all__ = [
     "render_monte_carlo_simulator",
     "render_subscription_manager",
     "render_net_worth_tracker",
-    "_create_pie_chart",
-    "_create_multi_line_chart",
-    "_create_multi_bar_chart",
-    "_create_projection_chart",
+    "create_pie_chart",
+    "create_multi_line_chart",
+    "create_multi_bar_chart",
+    "create_projection_chart",
 ]
