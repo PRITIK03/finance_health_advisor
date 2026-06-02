@@ -5,7 +5,7 @@ Side-by-side comparison of two users with metrics, charts, and winner analysis.
 import streamlit as st
 import pandas as pd
 import numpy as np
-from components import UIComponents, plotly_defaults
+from components import UIComponents
 
 
 def render_comparison(users_df, monthly_df, visualizer):
