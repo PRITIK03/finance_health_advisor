@@ -29,7 +29,7 @@ def render_net_worth_tracker(users_df, monthly_df, visualizer):
     # Calculate net worth components
     user_monthly['assets'] = (
         user_monthly['Savings'] +
-        user_monthly['Investments'] +
+        user_monthly['Investment'] +
         user_monthly['Retirement']
     )
     user_monthly['liabilities'] = user_monthly['total_debt']
