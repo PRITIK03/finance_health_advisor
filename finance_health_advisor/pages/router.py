@@ -34,6 +34,9 @@ PAGE_ROUTES = {
     "📊 Dashboard Overview": lambda **kwargs: render_dashboard(
         kwargs['users_df'], kwargs['monthly_df'], kwargs['recommendations_engine'], kwargs['visualizer']
     ),
+     "📈 Data Visualization Dashboard": lambda **kwargs: render_data_visualization(
+        kwargs['users_df'], kwargs['monthly_df'], kwargs['visualizer']
+    ),
     "🚨 Stress Test": lambda **kwargs: render_stress_test(
         kwargs['users_df'], kwargs['monthly_df'], kwargs['visualizer']
     ),
@@ -65,9 +68,6 @@ PAGE_ROUTES = {
         kwargs['users_df'], kwargs['monthly_df'], kwargs['visualizer']
     ),
     "💸 Debt Optimizer": lambda **kwargs: render_debt_optimizer(
-        kwargs['users_df'], kwargs['monthly_df'], kwargs['visualizer']
-    ),
-    "📈 Data Visualization Dashboard": lambda **kwargs: render_data_visualization(
         kwargs['users_df'], kwargs['monthly_df'], kwargs['visualizer']
     ),
     "📚 Financial Tips & Education": lambda **kwargs: render_financial_tips(),
