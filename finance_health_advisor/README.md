@@ -39,17 +39,46 @@ A professional-grade financial advisory dashboard built with **Streamlit** and *
 
 ## 📂 Project Structure
 
-- `app.py`: Main Streamlit orchestrator (lightweight entrypoint).
-- `pages/`: Modular UI sections for better maintainability.
-  - `__init__.py`: Package exports
-  - `charts.py`: Shared chart utilities
-  - `dashboard.py`: Dashboard overview page
-  - `what_if_simulator.py`, `tax_optimizer.py`, `monte_carlo_simulator.py`, `subscription_manager.py`, `net_worth_tracker.py`
-- `models.py`: Machine Learning pipelines and model training logic.
-- `preprocessing.py`: Data engineering, financial ratios, and simulation backends.
-- `visualizations.py`: Centralized module for all professional-grade charts and gauges.
-- `recommendations.py`: Rule-based and AI-driven recommendation engine.
-- `data_generator.py`: Synthetic data engine for large-scale financial simulation (10,000+ users).
+```
+finance_health_advisor/
+├── app.py                    # Streamlit app shell (data loading, sidebar, routing)
+├── main.py                   # CLI entrypoint for the full ML pipeline
+├── components.py             # Reusable UI widgets (metrics, cards, tabs, sparklines)
+├── styles.py                 # Centralized theme CSS (light/dark mode)
+├── pages/
+│   ├── __init__.py           # Page exports
+│   ├── router.py             # PAGE_ROUTES mapping (page name -> renderer)
+│   ├── dashboard.py          # Dashboard overview
+│   ├── stress_test.py        # Financial stress simulator
+│   ├── wealth_projection.py  # Compound interest projection
+│   ├── comparison.py         # Side-by-side user comparison
+│   ├── user_segmentation.py  # K-Means cluster profiles
+│   ├── risk_prediction.py    # Random Forest risk analysis
+│   ├── forecasting_page.py   # Savings forecasting
+│   ├── anomaly_detection.py  # Isolation Forest anomalies
+│   ├── recommendations_page.py # AI recommendations
+│   ├── goal_planner.py       # Financial goal roadmap
+│   ├── fire_tracker.py       # FIRE calculator
+│   ├── debt_optimizer.py     # Avalanche vs Snowball
+│   ├── data_viz.py           # Distribution / correlation / trend charts
+│   ├── financial_tips.py     # Educational expanders
+│   ├── document_vault.py     # Document upload demo
+│   ├── expense_classification.py # Spending breakdown
+│   ├── predictive_analytics.py  # Forecast + Monte Carlo suite
+│   ├── alerts.py             # Threshold-based alerts
+│   ├── peer_benchmarking.py  # KNN peer comparison
+│   ├── scenario_simulator.py # What-if Monte Carlo placeholder
+│   ├── data_explorer.py      # Raw data + CSV export
+│   ├── what_if_simulator.py  # Live budget slider simulator
+│   ├── tax_optimizer.py      # 401(k)/HSA/IRA planner
+│   ├── monte_carlo_simulator.py # Stochastic projections
+│   ├── subscription_manager.py  # Subscription audit
+│   └── net_worth_tracker.py # Net worth trend tracker
+├── models.py                 # ML pipelines (clustering, classification, etc.)
+├── preprocessing.py          # Feature engineering + simulation backends
+├── visualizations.py         # Plotly chart library
+├── recommendations.py        # Rule-based + AI recommendation engine
+└── data_generator.py         # Synthetic financial data (10,000 users)
 
 **Note:** All external CDN dependencies for UI icons have been removed for full offline / air-gapped compatibility.
 
