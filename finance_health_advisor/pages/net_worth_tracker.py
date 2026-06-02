@@ -37,15 +37,10 @@ def render_net_worth_tracker(users_df, monthly_df, visualizer):
 
     # Summary metrics
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Current Net Worth", f"${user_monthly['net_worth'].iloc[-1]:,.0f}")
-    with col2:
-        st.metric("Total Assets", f"${user_monthly['assets'].iloc[-1]:,.0f}")
-    with col3:
-        st.metric("Total Liabilities", f"${user_monthly['liabilities'].iloc[-1]:,.0f}")
-    with col4:
-        net_worth_change = user_monthly['net_worth'].iloc[-1] - user_monthly['net_worth'].iloc[0]
-        st.metric("Net Worth Change", f"${net_worth_change:+,.0f}")
+    with col1: st.metric("Current Net Worth", f"${user_monthly['net_worth'].iloc[-1]:,.0f}")
+    with col2: st.metric("Total Assets", f"${user_monthly['assets'].iloc[-1]:,.0f}")
+    with col3: st.metric("Total Liabilities", f"${user_monthly['liabilities'].iloc[-1]:,.0f}")
+    with col4: st.metric("Net Worth Change", f"${user_monthly['net_worth'].iloc[-1] - user_monthly['net_worth'].iloc[0]:+,.0f}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
