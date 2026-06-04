@@ -6,15 +6,17 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler
 from sklearn.impute import SimpleImputer
+from config import CONFIG
 
 
 class FinancialDataPreprocessor:
     """Preprocess and engineer features for financial data."""
-    
+
     def __init__(self):
         self.scaler = StandardScaler()
         self.label_encoders = {}
         self.imputer = SimpleImputer(strategy='median')
+        self.config = CONFIG
         
     def preprocess_users(self, df: pd.DataFrame) -> pd.DataFrame:
         """Preprocess user profile data."""
