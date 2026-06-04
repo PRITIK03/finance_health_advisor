@@ -11,19 +11,25 @@ from sklearn.ensemble import IsolationForest as SklearnIsolationForest
 from sklearn.neighbors import NearestNeighbors
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (classification_report, confusion_matrix, 
-                             silhouette_score, mean_absolute_error, 
+from sklearn.metrics import (classification_report, confusion_matrix,
+                             silhouette_score, mean_absolute_error,
                              mean_squared_error, r2_score)
 import warnings
 warnings.filterwarnings('ignore')
 
+from config import CONFIG
+
 
 class FinancialClusteringModel:
     """K-Means clustering for financial health segmentation."""
-    
-    def __init__(self, n_clusters: int = 5):
-        self.n_clusters = n_clusters
-        self.model = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+
+    def __init__(self, n_clusters: int = None):
+        self.n_clusters = n_clusters or CONFIG.models.n_clusters
+        self.model = KMeans(
+            n_clusters=self.n_clusters,
+            random_state=CONFIG.models.kmeans_random_state,
+            n_init=CONFIG.models.kmeans_n_init
+        )
         self.scaler = StandardScaler()
         self.cluster_labels = None
         
@@ -56,13 +62,13 @@ class FinancialClusteringModel:
 
 class RiskClassificationModel:
     """Random Forest classifier for financial risk prediction."""
-    
+
     def __init__(self):
         self.model = RandomForestClassifier(
-            n_estimators=100,
-            max_depth=15,
-            min_samples_split=10,
-            random_state=42,
+            n_estimators=CONFIG.models.rf_n_estimators,
+            max_depth=CONFIG.models.rf_max_depth,
+            min_samples_split=CONFIG.models.rf_min_samples_split,
+            random_state=CONFIG.models.rf_random_state,
             n_jobs=-1
         )
         self.scaler = StandardScaler()
