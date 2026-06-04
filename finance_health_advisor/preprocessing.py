@@ -549,13 +549,20 @@ def calculate_wealth_projection(
 
 
 def prepare_clustering_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Prepare data specifically for clustering analysis."""
+    """Prepare data specifically for clustering analysis.
     
+    Uses engineered features for better cluster separation.
+    """
+    # Use core financial features that best discriminate user segments
     features = ['monthly_income', 'monthly_expenses', 'monthly_savings', 
                 'monthly_investments', 'credit_score', 'total_debt', 
-                'subscription_count', 'lifestyle_score']
+                'subscription_count', 'lifestyle_score',
+                'savings_rate', 'expense_ratio', 'debt_to_income']
     
-    clustering_df = df[features].copy()
+    # Only include features that exist in the dataframe
+    available_features = [f for f in features if f in df.columns]
+    
+    clustering_df = df[available_features].copy()
     
     # Handle any remaining NaN
     clustering_df = clustering_df.fillna(clustering_df.median())
