@@ -18,6 +18,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from config import CONFIG
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class FinancialClusteringModel:
@@ -215,36 +218,53 @@ class FinancialMLPipeline:
         return self.clustering_model.fit_predict(X)
     
     def run_classification(self, X: pd.DataFrame, y: np.ndarray) -> dict:
-        """Run classification model."""
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=CONFIG.models.test_size, random_state=CONFIG.models.random_state, stratify=y
+        """Run classification model with train/val/test splits."""
+        # Train/validation/test split: 70/15/15
+        X_temp, X_test, y_temp, y_test = train_test_split(
+            X, y, test_size=0.15, random_state=CONFIG.models.random_state, stratify=y
+        )
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_temp, y_temp, test_size=0.176, random_state=CONFIG.models.random_state, stratify=y_temp  # 0.176 * 0.85 ≈ 0.15
         )
         
         self.classification_model = RiskClassificationModel()
         self.classification_model.fit(X_train, y_train)
         
         train_metrics = self.classification_model.evaluate(X_train.values, y_train)
+        val_metrics = self.classification_model.evaluate(X_val.values, y_val)
         test_metrics = self.classification_model.evaluate(X_test.values, y_test)
+        
+        logger.info(f"Classification - Train: {train_metrics['accuracy']:.4f}, "
+                   f"Val: {val_metrics['accuracy']:.4f}, Test: {test_metrics['accuracy']:.4f}")
         
         return {
             'train_metrics': train_metrics,
+            'val_metrics': val_metrics,
             'test_metrics': test_metrics
         }
     
     def run_forecasting(self, X: np.ndarray, y: np.ndarray) -> dict:
-        """Run savings forecasting."""
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=CONFIG.models.test_size, random_state=CONFIG.models.random_state
+        """Run savings forecasting with train/val/test splits."""
+        X_temp, X_test, y_temp, y_test = train_test_split(
+            X, y, test_size=0.15, random_state=CONFIG.models.random_state
+        )
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_temp, y_temp, test_size=0.176, random_state=CONFIG.models.random_state
         )
         
         self.forecast_model = SavingsForecastModel()
         self.forecast_model.fit(X_train, y_train)
         
         train_metrics = self.forecast_model.evaluate(X_train, y_train)
+        val_metrics = self.forecast_model.evaluate(X_val, y_val)
         test_metrics = self.forecast_model.evaluate(X_test, y_test)
+        
+        logger.info(f"Forecasting - Train R2: {train_metrics['r2']:.4f}, "
+                   f"Val R2: {val_metrics['r2']:.4f}, Test R2: {test_metrics['r2']:.4f}")
         
         return {
             'train_metrics': train_metrics,
+            'val_metrics': val_metrics,
             'test_metrics': test_metrics
         }
     
@@ -259,14 +279,25 @@ class FinancialMLPipeline:
         self.similar_users_model.fit(X)
 
 
-def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> tuple:
+def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame, 
+                     save_artifacts: bool = True, model_dir: str = "models") -> tuple:
     """Train all models and return results and pipeline.
     
-    This function now properly avoids data leakage by doing train/test splits
+    This function properly avoids data leakage by doing train/test splits
     before any preprocessing that could leak information.
+    
+    Args:
+        users_df: User profile data
+        monthly_df: Monthly transaction data
+        save_artifacts: Whether to save model artifacts to disk
+        model_dir: Directory to save model artifacts
+    
+    Returns:
+        Tuple of (results_dict, pipeline)
     """
     from preprocessing import (prepare_clustering_data, prepare_classification_data,
                               prepare_regression_data, FinancialDataPreprocessor)
+    from model_persistence import save_training_artifacts
     
     results = {}
     
@@ -274,10 +305,16 @@ def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> tuple:
     print("TRAINING ML MODELS")
     print("=" * 60)
     
+    # Preprocess users to create derived features
+    preprocessor = FinancialDataPreprocessor()
+    users_df = preprocessor.preprocess_users(users_df)
+    monthly_df = preprocessor.preprocess_monthly(monthly_df)
+    pipeline = FinancialMLPipeline()
+    pipeline.preprocessor = preprocessor
+
     # 1. Clustering - fit on all users (unsupervised, no target leakage)
     print("\n[1/5] Training K-Means Clustering...")
     clustering_data = prepare_clustering_data(users_df)
-    pipeline = FinancialMLPipeline()
     clusters = pipeline.run_clustering(clustering_data.values)
     users_df = users_df.copy()
     users_df['cluster'] = clusters
@@ -287,21 +324,23 @@ def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> tuple:
     print(f"   * Silhouette Score: {silhouette:.4f}")
     results['silhouette'] = silhouette
     
-    # 2. Classification - proper train/test split BEFORE preprocessing
+    # 2. Classification - proper train/val/test split AFTER preprocessing
     print("\n[2/5] Training Random Forest Classifier...")
     X_class, y_class, label_encoder = prepare_classification_data(users_df)
     pipeline.label_encoder = label_encoder
     results['classification'] = pipeline.run_classification(X_class, y_class)
     
     print(f"   * Test Accuracy: {results['classification']['test_metrics']['accuracy']:.4f}")
+    print(f"   * Val Accuracy: {results['classification']['val_metrics']['accuracy']:.4f}")
     print(f"   * CV Score: {results['classification']['test_metrics']['cv_mean']:.4f} (+/- {results['classification']['test_metrics']['cv_std']:.4f})")
     
-    # 3. Forecasting - proper train/test split
+    # 3. Forecasting - proper train/val/test split
     print("\n[3/5] Training Gradient Boosting Regressor...")
     X_reg, y_reg = prepare_regression_data(monthly_df)
     results['forecasting'] = pipeline.run_forecasting(X_reg.values, y_reg)
     
     print(f"   * Test R2 Score: {results['forecasting']['test_metrics']['r2']:.4f}")
+    print(f"   * Val R2 Score: {results['forecasting']['val_metrics']['r2']:.4f}")
     print(f"   * Test RMSE: ${results['forecasting']['test_metrics']['rmse']:.2f}")
     
     # 4. Anomaly Detection - unsupervised, fit on full data is OK
@@ -322,11 +361,23 @@ def train_all_models(users_df: pd.DataFrame, monthly_df: pd.DataFrame) -> tuple:
     pipeline.run_similar_users_search(clustering_data.values)
     print("   * Peer Comparison Model ready")
     
+    # Save artifacts if requested
+    if save_artifacts:
+        print("\n[6/6] Saving model artifacts...")
+        saved = save_training_artifacts(pipeline, preprocessor, label_encoder, results, model_dir)
+        print(f"   * Artifacts saved to {model_dir}/")
+    
     print("\n" + "=" * 60)
     print("ALL MODELS TRAINED SUCCESSFULLY!")
     print("=" * 60)
     
     return results, pipeline
+
+
+def load_trained_pipeline(model_dir: str = "models"):
+    """Load a previously trained pipeline."""
+    from model_persistence import load_training_artifacts
+    return load_training_artifacts(model_dir)
 
 
 if __name__ == "__main__":
