@@ -8,7 +8,7 @@ This is an end-to-end machine learning data analysis project that provides compr
 2. **Predict spending behavior** patterns (regression/forecasting)
 3. **Classify financial risk levels** (classification)
 4. **Detect anomalies** in spending patterns (anomaly detection)
-5. **Generate personalized recommendations** (rule-based + ML)
+5. **Generate personalized recommendations** (rule-based + ML).
 
 ## Unique Features
 
